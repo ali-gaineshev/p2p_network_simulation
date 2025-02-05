@@ -1,0 +1,57 @@
+html,
+body {
+  height: 100%;
+  margin: 0;
+}
+
+body {
+  display: flex;
+  min-height: 100vh;
+}
+
+#sidebar {
+  min-width: 200px;
+  max-width: 250px;
+  background-color: #f8f9fa;
+  padding: 20px;
+  height: 100vh;
+  position: fixed;
+  top: 0;
+  left: 0;
+}
+
+#content {
+  flex: 1;
+  padding: 20px;
+  margin-left: 250px;
+}
+
+.nav-link.active {
+  font-weight: bold;
+}
+
+header {
+  text-align: center;
+  padding: 20px;
+}
+
+header img {
+  max-width: 60%;
+  height: auto;
+}
+
+.paragrahps {
+  margin-top: 50px;
+  padding-left: 15%;
+  padding-right: 15%;
+}
+
+.home-table {
+  margin: 2rem auto;
+  width: 80%;
+}
+
+.home-table td:last-child,
+.home-table th:last-child {
+  text-align: center;
+}
