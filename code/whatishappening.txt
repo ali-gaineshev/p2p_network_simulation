@@ -1,0 +1,49 @@
+
+so in ns3 you will have 
+
+ns-allinone-3.43
+    - ns-3.43
+        -scratch
+            network-sim.cc
+            CMakeLists.txt
+            - subdir
+                p2p-packet.h
+                p2p-packet.cc
+                p2p-application.h
+                p2p-application.cc
+
+
+CMakeLists.txt
+
+I had to add these two lines to properly compile this in the line 67 
+```
+list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/subdir/p2p/p2p-packet.cc)
+list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/subdir/p2p/p2p-application.cc)
+```
+
+network-sim.cc
+
+where the actual sim is gonna occur , its a mess rn but i am just trying to test stuff
+only file w a main. we eventually will need to do more work and figure out how we want to conenct
+stuff but that is a later issue 
+
+p2p-packet
+
+i have defined a p2p packet with ping, pong, query and query hit
+each packet is what we will be sending with diff feilds in its
+very much wip but am doing it like this for now so we can get flooding first then modify
+
+p2p-application
+
+now that packet is semi working, its time to write the basic application stuff to attach
+to each node. this will be routing and bahaviours (ex. if they recive a ping, send a pong)
+
+eventially we will have the flooding done. this will be what we change when we do other ones
+
+
+after initial compile and build i am just running this command 
+ns-3.43 % ./ns3 build && ./ns3 run scratch/network-sim
+and its been working good
+
+
+note: i did have to update all my paths in c_cpp_properties.json as well as tasks.json 
