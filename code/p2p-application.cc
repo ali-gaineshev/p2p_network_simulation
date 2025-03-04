@@ -1,9 +1,14 @@
 // P2PApplication behaviour (where we will be basically building the gnutella like behaviour)
+// https://www.sfu.ca/~ljilja/ENSC427/Spring13/Projects/team6/Ensc427_final_project_report.pdf
+// http://computer.howstuffworks.com/file-sharing1.htm
+// http://www2.ensc.sfu.ca/~ljilja/ENSC427/Spring10/Projects/team7/final_report_Gnutella.pdf
 
-// need this to build
-int main(int argc, char *argv[]) {
-    return 0;
-}
+// #include "p2p-packet.h"
+// #include "p2p-application.h"
+// #include "ns3/header.h"
+// #include "ns3/packet.h"
+
+
 // PEER INTIALIZATION (each node registers itself upon sim start, store neighbour info in local vector)
 //  start running as a p2p peer
 //  maintiain a list of connected neighbours
