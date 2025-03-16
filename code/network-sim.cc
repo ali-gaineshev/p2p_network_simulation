@@ -7,6 +7,7 @@
 #include "ns3/animation-interface.h"
 #include "subdir/p2p/p2p-packet.h"
 #include "subdir/p2p/p2p-application.h"
+#include <unordered_set>
 
 // WE WILL END UP CHANGING THIS RN THE NODES ARE CONNECTED LIKE 1-2-3-4-5 just basic for now 
 // TODO -> once we have the p2p applicaiton we can use that here 
@@ -18,8 +19,6 @@ NS_LOG_COMPONENT_DEFINE("P2PNetworkSim");
 
 int main(int argc, char *argv[]) {
 
-    //NS_OBJECT_ENSURE_REGISTERED(P2PPacket);
-    //NS_LOG_COMPONENT_DEFINE("P2PApplication");
     // pass cmd line args (number of nodes / data range)
     CommandLine cmd;
     cmd.Parse(argc, argv);
@@ -29,8 +28,6 @@ int main(int argc, char *argv[]) {
     LogComponentEnable("P2PNetworkSim", LOG_LEVEL_INFO);
     LogComponentEnable("P2PPacket", LOG_LEVEL_INFO);
     LogComponentEnable("P2PApplication", LOG_LEVEL_INFO);
-
-
 
     NS_LOG_INFO("entering code");
     // creating the peers
@@ -49,122 +46,70 @@ int main(int argc, char *argv[]) {
     internet.Install(nodes);
     ipv4.SetBase("10.1.1.0", "255.255.255.0"); 
 
+    // create peer links and assign neighbours from the same spot. added stuff to ensure it is only adding the correct ips
     NetDeviceContainer devices;
     Ipv4InterfaceContainer interfaces;
-    // First, create and install the P2P links (network setup)
+    std::vector<std::vector<Ipv4Address>> nodeNeighbors(nodes.GetN());
+    std::vector<Ipv4Address> nodeIps(nodes.GetN());
     for (uint32_t i = 0; i < nodes.GetN() - 1; ++i) {
         NodeContainer pair(nodes.Get(i), nodes.Get(i + 1));
         devices = p2p.Install(pair);
-        interfaces.Add(ipv4.Assign(devices));
+        Ipv4InterfaceContainer tempInterfaces = ipv4.Assign(devices);
+
+        // Assign only one IP per node (store in a separate list with nodes first and secodn ip)
+        if (nodeIps[i] == Ipv4Address("10.1.1.0")) {
+        nodeIps[i] = tempInterfaces.GetAddress(0);  
+        }
+        nodeIps[i + 1] = tempInterfaces.GetAddress(1);  
+
+        if (nodeIps[i + 1] != Ipv4Address("10.1.1.0") && nodeIps[i + 1] != Ipv4Address("102.102.102.102")) {
+            nodeNeighbors[i].push_back(nodeIps[i + 1]);
+        } else {
+            NS_LOG_ERROR("Invalid IP detected for Node " << i << " neighbor: " << nodeIps[i + 1]);
+        }
+
+        if (nodeIps[i] != Ipv4Address("10.1.1.0") && nodeIps[i] != Ipv4Address("102.102.102.102")) {
+            nodeNeighbors[i + 1].push_back(nodeIps[i]);
+        } else {
+            NS_LOG_ERROR("Invalid IP detected for Node " << i + 1 << " neighbor: " << nodeIps[i]);
+        }
     }
 
-    // Now, create and install the P2PApplication for each node
+    // install the P2PApplication for each node
     for (uint32_t i = 0; i < nodes.GetN(); ++i) {
+        //NS_LOG_INFO("loop " << interfaces.GetAddress(i, 0));
         Ptr<P2PApplication> app = CreateObject<P2PApplication>();
         nodes.Get(i)->AddApplication(app);
         app->SetStartTime(Seconds(1.0));
         app->SetStopTime(Seconds(10.0)); // Adjust as needed
+
+        app->SetPeers(nodeNeighbors[i]);
     }
 
-    // // Assign peers after all applications are created
+    // DEBUGGING -> logging stuff to make sure the ip are assigned correctly
     // for (uint32_t i = 0; i < nodes.GetN(); ++i) {
-    //     Ptr<P2PApplication> app = DynamicCast<P2PApplication>(nodes.Get(i)->GetApplication(0));
-    //     if (app) {
-    //         std::vector<Ipv4Address> neighbors;
-    //         if (i > 0) {
-    //             neighbors.push_back(interfaces.GetAddress(i - 1)); // Previous node
-    //         }
-    //         if (i < nodes.GetN() - 1) {
-    //             neighbors.push_back(interfaces.GetAddress(i)); // Next node
-    //         }
-    //         if (!neighbors.empty()) {
-    //             NS_LOG_INFO("Node " << i << " has neighbors: " << neighbors[0] << " , " << neighbors[1]);
-    //         }
-
-    //         app->SetPeers(neighbors);
+    //     Ptr<Ipv4> ipv4 = nodes.Get(i)->GetObject<Ipv4>(); // Get node's Ipv4 object
+    //     if (ipv4->GetNInterfaces() > 0) { // Ensure the node has an interface
+    //         NS_LOG_INFO("Node " << i << " IP: " << ipv4->GetAddress(1, 0).GetLocal());
+    //     } else {
+    //         NS_LOG_ERROR(" Node " << i << " does not have a valid IP assigned!");
     //     }
     // }
 
-    // // log IP addresses for verification
-    // for (uint32_t i = 0; i < nodes.GetN(); ++i) {
-    // // Get the corresponding IP address for the interface (index 1 corresponds to the first assigned IP)
-    // NS_LOG_INFO("Node " << i << " IP: " << interfaces.GetAddress(i, 0)); // Index 0 corresponds to the first interface
-    // }
-
-    // // test packet with info from p2ppacket
-    // // serializing is just convertin class or instnace to linear format so it can be transmitted had to google
-    // //NS_LOG_INFO("test packet and serialization stuff ");
-    // P2PPacket testP(PING, 1234, Ipv4Address("10.1.1.1"), 5);
-    // // NS_LOG_INFO("Created packet: Type=" << testP.GetMessageType()
-    // //             << ", MessageId=" << testP.GetMessageId()
-    // //             << ", SenderIP=" << testP.GetSenderIp()
-    // //             << ", TTL=" << (uint32_t)testP.GetTtl());
-
-    // // print out packet size 
+    // DEBUGGING -> Test packet creation 
+    // P2PPacket testP(PING, 1234, Ipv4Address("10.1.1.1"), Ipv4Address("10.1.1.4"), 5, 0, Ipv4Address("10.1.1.1") );
     // Ptr<Packet> ns3Packet = Create<Packet>();
-    // ns3Packet -> AddHeader(testP);
-    // //NS_LOG_INFO("Serialized packet size: " << ns3Packet->GetSize() << " bytes");
+    // ns3Packet->AddHeader(testP);
 
-    // //deserialize to check correctness (shoudl be the same afterword)
-    // P2PPacket receivedPacket;
-    // ns3Packet->RemoveHeader(receivedPacket);
-    // // NS_LOG_INFO("Deserialized packet: Type=" << receivedPacket.GetMessageType()
-    // //             << ", MessageId=" << receivedPacket.GetMessageId()
-    // //             << ", SenderIP=" << receivedPacket.GetSenderIp()
-    // //             << ", TTL=" << (uint32_t)receivedPacket.GetTtl());
-
-
-    // // actually running this 
-    // NS_LOG_INFO("starting simulation");
-    // NS_LOG_INFO("manually send packet 0 -> 1");
-    // Simulator::Schedule(Seconds(2.0), &P2PApplication::SendPacket, 
-    //                 DynamicCast<P2PApplication>(nodes.Get(0)->GetApplication(0)), 
-    //                 PING, interfaces.GetAddress(1));
-
-    // //AnimationInterface anim("p2p-network.xml");
-    // Simulator::Run();
-    // Simulator::Destroy();
-    // NS_LOG_INFO("simulation complete");
-
-    // return 0;
-
-
-    // FRESHLY ADDED STUFF TO TEST NEW FUNCTIONALITY 
-    // Set peers for each node
-    for (uint32_t i = 0; i < nodes.GetN(); ++i) {
-        Ptr<P2PApplication> app = DynamicCast<P2PApplication>(nodes.Get(i)->GetApplication(0));
-        if (app) {
-            std::vector<Ipv4Address> neighbors;
-            if (i > 0) neighbors.push_back(interfaces.GetAddress(i - 1));  // Add previous node as neighbor
-            if (i < nodes.GetN() - 1) neighbors.push_back(interfaces.GetAddress(i + 1));  // Add next node as neighbor
-            app->SetPeers(neighbors);
-        }
-    }
-
-
-    // Log the IP addresses for verification
-    for (uint32_t i = 0; i < nodes.GetN(); ++i) {
-        NS_LOG_INFO("Node " << i << " IP: " << interfaces.GetAddress(i, 0));
-    }
-
-    // Test packet creation and serialization
-    // P2PPacket::P2PPacket(MessageType type, uint32_t msgId, Ipv4Address sender, Ipv4Address dest, uint8_t ttl, uint8_t hop, Ipv4Address prevhop)
-    P2PPacket testP(PING, 1234, Ipv4Address("10.1.1.1"), Ipv4Address("10.1.1.4"), 5, 0, Ipv4Address("10.1.1.1") );
-    Ptr<Packet> ns3Packet = Create<Packet>();
-    ns3Packet->AddHeader(testP);
-    
-    // Deserialize to check correctness
-    P2PPacket receivedPacket;
-    ns3Packet->RemoveHeader(receivedPacket);
-    
     // Start the simulation
     NS_LOG_INFO("Starting simulation...");
     
-    // Send a ping from Node 0 to Node 1
+    // Send a ping from Node 0 to Node 1 (simulation will continue to forward it)
     Simulator::Schedule(Seconds(2.0), &P2PApplication::SendPing, 
                         DynamicCast<P2PApplication>(nodes.Get(0)->GetApplication(0)));
 
-    //AnimationInterface anim("p2p-network-t.xml");
+    // UNCOMMENT AND CHANGE THE NAME TO MAKE XML FILE FOR ANIMATION 
+    //AnimationInterface anim("p2p-network-4.xml");
     Simulator::Run();
     Simulator::Destroy();
     NS_LOG_INFO("Simulation complete");

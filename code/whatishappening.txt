@@ -42,35 +42,35 @@ eventially we will have the flooding done. this will be what we change when we d
 
 
 after initial compile and build i am just running this command 
-ns-3.43 % ./ns3 build && ./ns3 run scratch/network-sim
-and its been working good
+
+../../ns-allinone-3.43 % ./ns-3.43/ns3 build && ./ns-3.43/ns3 run scratch/network-sim (compile and run)
+../../ns-allinone-3.43 % ./netanim-3.109/NetAnim (launch netanim)
 
 
 note: i did have to update all my paths in c_cpp_properties.json as well as tasks.json 
 
-current output 
-starting sim
-Node 0 IP: 10.1.1.1
-Node 1 IP: 10.1.1.2
-Node 2 IP: 10.1.1.3
-Node 3 IP: 10.1.1.4
-Node 4 IP: 10.1.1.5
-test packet and serialization stuff 
-Created packet: Type=0, MessageId=1234, SenderIP=10.1.1.1, TTL=5
-Serialized packet size: 10 bytes
-Deserialized packet: Type=0, MessageId=1234, SenderIP=10.1.1.1, TTL=5
-starting simulation
-simulation complete
+CURRENT OUTPUT 
+
+Current neighbors: 
+SendingNode: 10.1.1.1
+Sent 0 packet to 10.1.1.2
+
+Received packet at 10.1.1.2 from 10.1.1.1
+Forwarding packet from 10.1.1.2 to 10.1.1.4
+
+Received packet at 10.1.1.4 from 10.1.1.2
+Forwarding packet from 10.1.1.4 to 10.1.1.6
+
+Received packet at 10.1.1.6 from 10.1.1.4
+Forwarding packet from 10.1.1.6 to 10.1.1.8
+
+Received packet at 10.1.1.8 from 10.1.1.6
+Simulation complete
 
 
-next steps for tmr / wednesday 
-1. define for (ping, pong, query, queryhit)
-    . when nodes should send these
-    . how to handle them
-    . recieving bahaviour 
-2. impliment packet handling in the p2p-application code
-    . function to send and generae packets
-    . function to recieve packets
-    . function to process emssages
-3. modify the netowrk-sim code to use this functionality and apply the application to the nodes
-4. debug and test this stuff then we off
+succesfully forwarding a packet from a ping
+
+TODO 
+
+modify this to be a query, if we want dynamic we will have to modify alot to make a peer join initialize then join its c_cpp_properties
+currently thihs is being ran as if the netowrk is static and already linked up befor eth esumilation
