@@ -31,11 +31,12 @@ public:
     virtual void StopApplication() override;
 
     void SetPeers(std::vector<Ipv4Address> neighbours);
-    void SendPacket(MessageType type, Ipv4Address dest, uint8_t ttl, Ipv4Address curaddy);
+    void SendPacket(MessageType type, Ipv4Address dest, uint8_t ttl, Ipv4Address curaddy, uint32_t sinkn);
     void RecievePacket(Ptr<Socket> socket);
-    void SendQuery(std::string filename);
+    void SendQuery(uint32_t sinknode);
+    void QueryHit(P2PPacket ppacket);
+    void ForwardQueryHit(P2PPacket ppacket);
     void SendPing();
-    // void HandleQuery(Ptr<Socket> socket);
 
 
 private:

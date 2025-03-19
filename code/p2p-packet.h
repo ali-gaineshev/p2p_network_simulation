@@ -6,6 +6,7 @@
 #include "ns3/header.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/packet.h"
+#include <vector>
 
 namespace ns3 {
 
@@ -22,12 +23,15 @@ private:
     uint8_t m_messageType;
     uint8_t default_ttl = 5;
     uint8_t hops;
-    Ipv4Address previousHop;
+    //Ipv4Address previousHop; // modified from prevhop
     Ipv4Address destIp;
+    uint32_t sinkNode;
+    std::vector<Ipv4Address> path; // store path instead of prev hop
 
 public:
     P2PPacket();
-    P2PPacket(MessageType, uint32_t msgId, Ipv4Address source, Ipv4Address dest, uint8_t ttl , uint8_t hop, Ipv4Address prevhop);
+    P2PPacket(MessageType, uint32_t msgId, Ipv4Address source, Ipv4Address dest, uint8_t ttl , 
+    uint8_t hop, uint32_t sinknode, std::vector<Ipv4Address> pathHistory);
 
     static TypeId GetTypeId();
     virtual TypeId GetInstanceTypeId() const override;
@@ -37,23 +41,35 @@ public:
     virtual uint32_t Deserialize(Buffer::Iterator start) override;
     virtual uint32_t GetSerializedSize() const override;
 
-    // get set
+    // genera functions 
+    void AddToPath(Ipv4Address ip);
+    void RemoveLastHop();
+    void DecrementTtl();
+    uint32_t GenerateMessageId();
+    bool IsPathEmpty() const;
+
+    // get
     MessageType GetMessageType() const;
     uint32_t GetMessageId() const;
     Ipv4Address GetSenderIp() const;
     Ipv4Address GetDestIp() const;
     uint8_t GetTtl() const;
     uint8_t GetHops() const;
-    Ipv4Address GetPrevHop() const;
-    void DecrementTtl();
-    uint32_t GenerateMessageId();
+    //Ipv4Address GetPrevHop() const;
+    uint32_t GetSinkNode() const;
+    Ipv4Address GetLastHop() const;
+    
+    // set
     void SetMessageType(MessageType type);
     void SetMessagesId(uint32_t id);
     void SetSenderIp(Ipv4Address ip);
     void SetDestIp(Ipv4Address d);
-    void SetPrevHop(Ipv4Address prev);
+    //void SetPrevHop(Ipv4Address prev);
     void SetTtl(uint8_t ttl);
     void SetHops(uint8_t hop);
+    void SetSinkNode(uint32_t nodeId);
+    
+
 
     // change for debuging stuff
     virtual void Print(std::ostream &os) const override;
