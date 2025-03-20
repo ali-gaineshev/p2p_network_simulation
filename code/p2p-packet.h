@@ -23,7 +23,6 @@ private:
     uint8_t m_messageType;
     uint8_t default_ttl = 5;
     uint8_t hops;
-    //Ipv4Address previousHop; // modified from prevhop
     Ipv4Address destIp;
     uint32_t sinkNode;
     std::vector<Ipv4Address> path; // store path instead of prev hop
@@ -55,21 +54,18 @@ public:
     Ipv4Address GetDestIp() const;
     uint8_t GetTtl() const;
     uint8_t GetHops() const;
-    //Ipv4Address GetPrevHop() const;
     uint32_t GetSinkNode() const;
     Ipv4Address GetLastHop() const;
+    std::vector<Ipv4Address> GetPath() const;
     
     // set
     void SetMessageType(MessageType type);
     void SetMessagesId(uint32_t id);
     void SetSenderIp(Ipv4Address ip);
     void SetDestIp(Ipv4Address d);
-    //void SetPrevHop(Ipv4Address prev);
     void SetTtl(uint8_t ttl);
     void SetHops(uint8_t hop);
     void SetSinkNode(uint32_t nodeId);
-    
-
 
     // change for debuging stuff
     virtual void Print(std::ostream &os) const override;

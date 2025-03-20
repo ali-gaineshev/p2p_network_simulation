@@ -9,10 +9,6 @@
 #include "subdir/p2p/p2p-application.h"
 #include <unordered_set>
 
-// WE WILL END UP CHANGING THIS RN THE NODES ARE CONNECTED LIKE 1-2-3-4-5 just basic for now 
-// TODO -> once we have the p2p applicaiton we can use that here 
-
-
 // define logging component -> P2PNetworkSim for debugging
 using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("P2PNetworkSim");
@@ -27,6 +23,7 @@ int main(int argc, char *argv[]) {
     // add NS_LOG_INFO to print assigned ip / asciiTraceHelper to gen logs
     LogComponentEnable("P2PNetworkSim", LOG_LEVEL_INFO);
     LogComponentEnable("P2PPacket", LOG_LEVEL_INFO);
+    LogComponentEnable("P2PPacket", LOG_LEVEL_ALL);
     LogComponentEnable("P2PApplication", LOG_LEVEL_INFO);
 
     NS_LOG_INFO("entering code");
@@ -45,6 +42,10 @@ int main(int argc, char *argv[]) {
     Ipv4AddressHelper ipv4;
     internet.Install(nodes);
     ipv4.SetBase("10.1.1.0", "255.255.255.0"); 
+
+    // DEBUG -> creates pcap file for wireshark look 
+    //p2p.EnablePcapAll("p2p-network-trace");
+
 
     // create peer links and assign neighbours from the same spot. added stuff to ensure it is only adding the correct ips
     NetDeviceContainer devices;
@@ -81,35 +82,32 @@ int main(int argc, char *argv[]) {
         Ptr<P2PApplication> app = CreateObject<P2PApplication>();
         nodes.Get(i)->AddApplication(app);
         app->SetStartTime(Seconds(1.0));
-        app->SetStopTime(Seconds(10.0)); // Adjust as needed
+        app->SetStopTime(Seconds(10.0)); // adjust
 
         app->SetPeers(nodeNeighbors[i]);
     }
 
-    // DEBUGGING -> logging stuff to make sure the ip are assigned correctly
-    // for (uint32_t i = 0; i < nodes.GetN(); ++i) {
-    //     Ptr<Ipv4> ipv4 = nodes.Get(i)->GetObject<Ipv4>(); // Get node's Ipv4 object
-    //     if (ipv4->GetNInterfaces() > 0) { // Ensure the node has an interface
-    //         NS_LOG_INFO("Node " << i << " IP: " << ipv4->GetAddress(1, 0).GetLocal());
-    //     } else {
-    //         NS_LOG_ERROR(" Node " << i << " does not have a valid IP assigned!");
-    //     }
-    // }
-
-    // DEBUGGING -> Test packet creation 
-    // P2PPacket testP(PING, 1234, Ipv4Address("10.1.1.1"), Ipv4Address("10.1.1.4"), 5, 0, Ipv4Address("10.1.1.1") );
-    // Ptr<Packet> ns3Packet = Create<Packet>();
-    // ns3Packet->AddHeader(testP);
-
     // Start the simulation
     NS_LOG_INFO("Starting simulation...");
     
+    // DEBUGGING -> to show all underlying ipv4 protocol logs (helps to see if packet being dropped)
+    //LogComponentEnable("Ipv4L3Protocol", LOG_LEVEL_ALL);
+
     // Send a ping from Node 0 to Node 1 (simulation will continue to forward it)
     Simulator::Schedule(Seconds(2.0), &P2PApplication::SendPing, 
                         DynamicCast<P2PApplication>(nodes.Get(0)->GetApplication(0)));
-
+    // Send a query dest at 3
+    Simulator::Schedule(Seconds(4.0),MakeEvent(&P2PApplication::SendQuery, 
+                        DynamicCast<P2PApplication>(nodes.Get(0)->GetApplication(0)), 3));
+    // Send a query dest at 2
+    Simulator::Schedule(Seconds(6.0),MakeEvent(&P2PApplication::SendQuery, 
+                        DynamicCast<P2PApplication>(nodes.Get(0)->GetApplication(0)), 2));
+    // // Send a query dest at 4
+    Simulator::Schedule(Seconds(8.0),MakeEvent(&P2PApplication::SendQuery, 
+                        DynamicCast<P2PApplication>(nodes.Get(0)->GetApplication(0)), 4));
+    
     // UNCOMMENT AND CHANGE THE NAME TO MAKE XML FILE FOR ANIMATION 
-    //AnimationInterface anim("p2p-network-4.xml");
+    //AnimationInterface anim("p2p-network-q6.xml");
     Simulator::Run();
     Simulator::Destroy();
     NS_LOG_INFO("Simulation complete");

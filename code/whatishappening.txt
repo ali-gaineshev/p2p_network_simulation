@@ -51,24 +51,100 @@ note: i did have to update all my paths in c_cpp_properties.json as well as task
 
 CURRENT OUTPUT 
 
+entering code
+Invalid IP detected for Node 1 neighbor: 102.102.102.102
+Starting simulation...
 Current neighbors: 
 SendingNode: 10.1.1.1
 Sent 0 packet to 10.1.1.2
 
-Received packet at 10.1.1.2 from 10.1.1.1
-Forwarding packet from 10.1.1.2 to 10.1.1.4
+rp: at 10.1.1.2 from 10.1.1.1 of type 0
+rp: forwarding packet from 10.1.1.2 to 10.1.1.4
 
-Received packet at 10.1.1.4 from 10.1.1.2
-Forwarding packet from 10.1.1.4 to 10.1.1.6
+rp: at 10.1.1.4 from 10.1.1.2 of type 0
+rp: forwarding packet from 10.1.1.4 to 10.1.1.6
 
-Received packet at 10.1.1.6 from 10.1.1.4
-Forwarding packet from 10.1.1.6 to 10.1.1.8
+rp: at 10.1.1.6 from 10.1.1.4 of type 0
+rp: forwarding packet from 10.1.1.6 to 10.1.1.8
 
-Received packet at 10.1.1.8 from 10.1.1.6
+rp: at 10.1.1.8 from 10.1.1.6 of type 0
+Sent 2 packet to 10.1.1.2
+
+rp: at 10.1.1.2 from 10.1.1.1 of type 2
+rp: forwarding packet from 10.1.1.2 to 10.1.1.4
+
+rp: at 10.1.1.4 from 10.1.1.2 of type 2
+rp: forwarding packet from 10.1.1.4 to 10.1.1.6
+
+rp: at 10.1.1.6 from 10.1.1.4 of type 2
+rp: query hit at 3 !!!!!!
+in QH: curaddy 10.1.1.6 prevhop 10.1.1.4 type 2
+QH from 10.1.1.6 back to 10.1.1.4 type 3 with ttl 5
+
+rp: at 10.1.1.4 from 10.1.1.2 of type 3
+in FQH: curaddy 10.1.1.4 prevhop 10.1.1.2 type 3
+FQH from 10.1.1.4 to 10.1.1.2 with ttl 5
+
+rp: at 10.1.1.2 from 10.1.1.1 of type 3
+in FQH: curaddy 10.1.1.2 prevhop 10.1.1.1 type 3
+FQH from 10.1.1.2 to 10.1.1.1 with ttl 5
+
+rp: at 10.1.1.1 from 0.0.0.0 of type 3
+in FQH: curaddy 10.1.1.1 prevhop 0.0.0.0 type 3
+back to sender peer 10.1.1.1
+Sent 2 packet to 10.1.1.2
+
+rp: at 10.1.1.2 from 10.1.1.1 of type 2
+rp: forwarding packet from 10.1.1.2 to 10.1.1.4
+
+rp: at 10.1.1.4 from 10.1.1.2 of type 2
+rp: query hit at 2 !!!!!!
+in QH: curaddy 10.1.1.4 prevhop 10.1.1.2 type 2
+QH from 10.1.1.4 back to 10.1.1.2 type 3 with ttl 6
+
+rp: at 10.1.1.2 from 10.1.1.1 of type 3
+in FQH: curaddy 10.1.1.2 prevhop 10.1.1.1 type 3
+FQH from 10.1.1.2 to 10.1.1.1 with ttl 6
+
+rp: at 10.1.1.1 from 0.0.0.0 of type 3
+in FQH: curaddy 10.1.1.1 prevhop 0.0.0.0 type 3
+back to sender peer 10.1.1.1
+Sent 2 packet to 10.1.1.2
+
+rp: at 10.1.1.2 from 10.1.1.1 of type 2
+rp: forwarding packet from 10.1.1.2 to 10.1.1.4
+
+rp: at 10.1.1.4 from 10.1.1.2 of type 2
+rp: forwarding packet from 10.1.1.4 to 10.1.1.6
+
+rp: at 10.1.1.6 from 10.1.1.4 of type 2
+rp: forwarding packet from 10.1.1.6 to 10.1.1.8
+
+rp: at 10.1.1.8 from 10.1.1.6 of type 2
+rp: query hit at 4 !!!!!!
+in QH: curaddy 10.1.1.8 prevhop 10.1.1.6 type 2
+QH from 10.1.1.8 back to 10.1.1.6 type 3 with ttl 4
+
+rp: at 10.1.1.6 from 10.1.1.4 of type 3
+in FQH: curaddy 10.1.1.6 prevhop 10.1.1.4 type 3
+FQH from 10.1.1.6 to 10.1.1.4 with ttl 4
+
+rp: at 10.1.1.4 from 10.1.1.2 of type 3
+in FQH: curaddy 10.1.1.4 prevhop 10.1.1.2 type 3
+FQH from 10.1.1.4 to 10.1.1.2 with ttl 4
+
+rp: at 10.1.1.2 from 10.1.1.1 of type 3
+in FQH: curaddy 10.1.1.2 prevhop 10.1.1.1 type 3
+FQH from 10.1.1.2 to 10.1.1.1 with ttl 4
+
+rp: at 10.1.1.1 from 0.0.0.0 of type 3
+in FQH: curaddy 10.1.1.1 prevhop 0.0.0.0 type 3
+back to sender peer 10.1.1.1
 Simulation complete
 
 
-succesfully forwarding a packet from a ping
+we currently have nodes finding the sink and then returning to the sender. check my comments to see what logic i had to change it was adding a backward path
+
 
 TODO 
 
