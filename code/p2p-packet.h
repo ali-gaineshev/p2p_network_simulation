@@ -6,16 +6,24 @@
 #include "ns3/header.h"
 #include "ns3/ipv4-address.h"
 #include "ns3/packet.h"
+
 #include <vector>
 
-namespace ns3 {
+namespace ns3
+{
 
 // basic types for now can edit later
-enum MessageType {PING, PONG, QUERY, QUERY_HIT };
+enum MessageType
+{
+    PING,
+    PONG,
+    QUERY,
+    QUERY_HIT
+};
 
-class P2PPacket : public Header {
-
-private:
+class P2PPacket : public Header
+{
+  private:
     uint32_t descriptorId;
     MessageType payloadDescriptor;
     Ipv4Address senderIp;
@@ -27,20 +35,26 @@ private:
     uint32_t sinkNode;
     std::vector<Ipv4Address> path; // store path instead of prev hop
 
-public:
+  public:
     P2PPacket();
-    P2PPacket(MessageType, uint32_t msgId, Ipv4Address source, Ipv4Address dest, uint8_t ttl , 
-    uint8_t hop, uint32_t sinknode, std::vector<Ipv4Address> pathHistory);
+    P2PPacket(MessageType,
+              uint32_t msgId,
+              Ipv4Address source,
+              Ipv4Address dest,
+              uint8_t ttl,
+              uint8_t hop,
+              uint32_t sinknode,
+              std::vector<Ipv4Address> pathHistory);
 
     static TypeId GetTypeId();
     virtual TypeId GetInstanceTypeId() const override;
 
-    // serialization stuff 
+    // serialization stuff
     virtual void Serialize(Buffer::Iterator start) const override;
     virtual uint32_t Deserialize(Buffer::Iterator start) override;
     virtual uint32_t GetSerializedSize() const override;
 
-    // genera functions 
+    // genera functions
     void AddToPath(Ipv4Address ip);
     void RemoveLastHop();
     void DecrementTtl();
@@ -57,7 +71,7 @@ public:
     uint32_t GetSinkNode() const;
     Ipv4Address GetLastHop() const;
     std::vector<Ipv4Address> GetPath() const;
-    
+
     // set
     void SetMessageType(MessageType type);
     void SetMessagesId(uint32_t id);
@@ -68,9 +82,8 @@ public:
     void SetSinkNode(uint32_t nodeId);
 
     // change for debuging stuff
-    virtual void Print(std::ostream &os) const override;
-
+    virtual void Print(std::ostream& os) const override;
 };
-}
+} // namespace ns3
 
 #endif
