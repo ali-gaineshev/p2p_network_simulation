@@ -11,14 +11,20 @@ ns-allinone-3.43
                 p2p-packet.cc
                 p2p-application.h
                 p2p-application.cc
+                p2p-network-builder.cc
+                p2p-network-builder.h
+                p2p-util.cc
+                p2p-util.h
 
 
 CMakeLists.txt
 
 I had to add these two lines to properly compile this in the line 67 
 ```
-list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/subdir/p2p/p2p-packet.cc)
-list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/subdir/p2p/p2p-application.cc)
+  list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/subdir/p2p/p2p-packet.cc)
+  list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/subdir/p2p/p2p-application.cc)
+  list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/subdir/p2p/p2p-network-builder.cc)
+  list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/subdir/p2p/p2p-util.cc)
 ```
 
 network-sim.cc

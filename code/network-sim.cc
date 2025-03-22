@@ -1,6 +1,7 @@
 #include "subdir/p2p/p2p-application.h"
 #include "subdir/p2p/p2p-network-builder.h"
 #include "subdir/p2p/p2p-packet.h"
+#include "subdir/p2p/p2p-util.h"
 
 #include "ns3/animation-interface.h"
 #include "ns3/applications-module.h"
@@ -16,31 +17,6 @@
 using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("P2PNetworkSim");
 
-void
-PositionTreeNodes(uint32_t nodeIndex,
-                  double x,
-                  double y,
-                  double xOffset,
-                  double yOffset,
-                  AnimationInterface& anim,
-                  NodeContainer& nodes)
-{
-    uint32_t numNodes = nodes.GetN();
-    if (nodeIndex == numNodes)
-        return;
-
-    anim.SetConstantPosition(nodes.Get(nodeIndex), x, y);
-
-    uint32_t leftChild = 2 * nodeIndex + 1;
-    uint32_t rightChild = 2 * nodeIndex + 2;
-
-    if (leftChild < numNodes)
-        PositionTreeNodes(leftChild, x - xOffset, y + yOffset, xOffset / 2, yOffset, anim, nodes);
-
-    if (rightChild < numNodes)
-        PositionTreeNodes(rightChild, x + xOffset, y + yOffset, xOffset / 2, yOffset, anim, nodes);
-}
-
 int
 main(int argc, char* argv[])
 {
@@ -53,9 +29,10 @@ main(int argc, char* argv[])
     LogComponentEnable("P2PPacket", LOG_LEVEL_INFO);
     LogComponentEnable("P2PApplication", LOG_LEVEL_INFO);
     LogComponentEnable("NetworkBuilder", LOG_LEVEL_INFO);
+    LogComponentEnable("Util", LOG_LEVEL_INFO);
 
     // GLOBAL VARIABLES
-    uint32_t numNodes = 10;
+    uint32_t numNodes = 13;
     int srcIndex = 0;
     int sinkIndex = 9;
 
@@ -80,11 +57,12 @@ main(int argc, char* argv[])
     // DEBUGGING -> to show all underlying ipv4 protocol logs (helps to see if packet being dropped)
     // LogComponentEnable("Ipv4L3Protocol", LOG_LEVEL_ALL);
 
-    // Simulate query from node 0 to node 4
-    Simulator::Schedule(Seconds(8.0),
-                        MakeEvent(&P2PApplication::Flood,
-                                  DynamicCast<P2PApplication>(net.nodes.Get(0)->GetApplication(0)),
-                                  sinkIndex));
+    // Simulate query from node src to sink index
+    Simulator::Schedule(
+        Seconds(8.0),
+        MakeEvent(&P2PApplication::InitialFlood,
+                  DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+                  sinkIndex));
 
     // Create XML animation file
     AnimationInterface anim("p2p-network-routing.xml");
@@ -94,7 +72,7 @@ main(int argc, char* argv[])
     anim.UpdateNodeDescription(sinkIndex, "Sink");
     anim.UpdateNodeColor(sinkIndex, 0, 0, 255);
 
-    PositionTreeNodes(0, 45.5, 1.0, 15, 15, anim, net.nodes);
+    P2PUtil::PositionTreeNodes(0, 45.5, 1.0, 20, 15, anim, net.nodes);
 
     Simulator::Run();
     Simulator::Destroy();

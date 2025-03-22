@@ -1,5 +1,7 @@
 #include "p2p-network-builder.h"
 
+#include "p2p-util.h"
+
 #include "ns3/ipv4.h"
 #include "ns3/log.h"
 
@@ -119,29 +121,6 @@ CreateTreeNetwork(uint32_t numNodes)
     net.nodes = allNodes;
     net.nodeNeighbors = nodeNeighbors;
 
-    PrintNetworkInfo(net);
+    P2PUtil::PrintNetworkInfo(net);
     return net;
-}
-
-void
-PrintNetworkInfo(const P2PNetwork& net)
-{
-    NS_LOG_INFO("------------------------------");
-    NS_LOG_INFO("Network Information from p2p-network-builder.cc:");
-
-    for (uint32_t i = 0; i < net.nodes.GetN(); ++i)
-    {
-        Ptr<Node> node = net.nodes.Get(i);
-        Ptr<Ipv4> ipv4 = node->GetObject<Ipv4>();
-
-        NS_LOG_INFO("Node " << i << " | NetDevices: " << ipv4->GetNInterfaces() - 1
-                            << " | Neighbors: " << net.nodeNeighbors[i].size());
-
-        for (uint32_t j = 1; j < ipv4->GetNInterfaces(); ++j)
-        { // Skip loopback interface
-            NS_LOG_INFO("  Interface " << j << " -> IP: " << ipv4->GetAddress(j, 0).GetLocal()
-                                       << " | Neighbor: " << net.nodeNeighbors[i][j - 1]);
-        }
-    }
-    NS_LOG_INFO("------------------------------\n");
 }
