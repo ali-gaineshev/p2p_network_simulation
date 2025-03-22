@@ -56,7 +56,9 @@ P2PApplication::GetTypeId()
     return tid;
 }
 
-// called on start, binds each ip with a port to recieve and send from
+/**
+ * Starts the application by binding each IP with a port to send and receive data.
+ */
 void
 P2PApplication::StartApplication()
 {
@@ -83,7 +85,9 @@ P2PApplication::StartApplication()
     // PrintSocketBindings();
 }
 
-// on stop, close all sockets
+/**
+ * Stops the application by closing all sockets.
+ */
 void
 P2PApplication::StopApplication()
 {
@@ -101,21 +105,21 @@ P2PApplication::StopApplication()
 //                                FORWARDING QUERY HIT
 // --------------------------------------------------------------------------
 
-// logic for backward forwarding when there is a query hit
+/**
+ * logic for backward forwarding when there is a query hit
+ */
 void
 P2PApplication::ForwardQueryHit(P2PPacket ppacket, int lastHopIndex)
 {
     Ipv4Address lastHopIPV4 = m_neighbours[lastHopIndex];
     Ipv4Address curIPV4 = m_ipv4Addresses[lastHopIndex];
 
-    if (ppacket.GetSenderIp() == curIPV4)
-    {
-        NS_LOG_INFO("back to sender peer " << curIPV4);
-        return;
-    }
+    // set te destination to the last hop and forward the packet to it
     ppacket.SetMessageType(QUERY_HIT);
     ppacket.SetDestIp(lastHopIPV4);
     ppacket.RemoveLastHop();
+    // so right now each time it forward this it will increase the ttl, not sure if this is a good
+    // idea right now
     ppacket.SetTtl(ppacket.GetTtl() + 2);
 
     Ptr<Packet> newPacket = Create<Packet>();
@@ -130,7 +134,10 @@ P2PApplication::ForwardQueryHit(P2PPacket ppacket, int lastHopIndex)
 //                                SENDING QUERIES
 // ----------------------------------------------------------------------------
 
-// send the first packet. Call from Initial Flood or Initial Random Walk
+/**
+ * sends the first packet from src. Call from Initial Flood, Initial Random Walk or Initial
+ * Normalized Flood
+ */
 void
 P2PApplication::SendPacketFromSrc(MessageType type,
                                   Ipv4Address dest,
@@ -155,7 +162,9 @@ P2PApplication::SendPacketFromSrc(MessageType type,
 //                                FLOODING
 // ----------------------------------------------------------------------------
 
-// initial flood
+/**
+ * first flooding from src
+ */
 void
 P2PApplication::InitialFlood(uint32_t sinknode)
 {
@@ -168,7 +177,12 @@ P2PApplication::InitialFlood(uint32_t sinknode)
     }
 }
 
-// at intermediate nodes
+/**
+ * Handles Flooding in intermediate nodes.
+ * Idea is that it should the query to all it's neighbours except for the sender
+ *
+ * @param excludeIndex - is the index of a neighbour and ipv4address that request came from
+ */
 void
 P2PApplication::FloodExceptSender(P2PPacket p2pPacket, int excludeIndex)
 {
@@ -205,14 +219,21 @@ P2PApplication::FloodExceptSender(P2PPacket p2pPacket, int excludeIndex)
 //                                NORMALIZED FLOODING
 // ----------------------------------------------------------------------------
 
-// first random walk from src
+/**
+ * first normalized flooding from src
+ */
 void
 P2PApplication::InitialNormalizedFlood(uint32_t sinknode,
                                        int howManyNodes) // feel free to add anything here
 {
 }
 
-// at intermediate nodes
+/**
+ * Handles Normalized Flooding in intermediate nodes.
+ * Idea is that it should the query to all it's neighbours except for the sender
+ *
+ * @param excludeIndex - is the index of a neighbour and ipv4address that request came from
+ */
 void
 P2PApplication::NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeIndex, int howManyNodes)
 {
@@ -222,13 +243,20 @@ P2PApplication::NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeInde
 //                                RANDOM WALK
 // ----------------------------------------------------------------------------
 
-// first random walk from src
+/**
+ * first random walk from src
+ */
 void
 P2PApplication::InitialRandomWalk(uint32_t sinknode) // feel free to add anything here
 {
 }
 
-// at intermediate nodes
+/**
+ * Handles Random Walk in intermediate nodes.
+ * Idea is that it should the query to all it's neighbours except for the sender
+ *
+ * @param excludeIndex - is the index of a neighbour and ipv4address that request came from
+ */
 void
 P2PApplication::RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex)
 {
@@ -238,7 +266,9 @@ P2PApplication::RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex)
 //                                RECEIVING REQUESTS
 // --------------------------------------------------------------------------
 
-// Handles the logic for receiving a packet in the P2P network
+/**
+ * Handles the logic for receiving a packet in the P2P network.
+ */
 void
 P2PApplication::RecievePacket(Ptr<Socket> socket)
 {
@@ -247,12 +277,15 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     P2PPacket p2pPacket;
     packet->RemoveHeader(p2pPacket); // Extract the custom P2P packet header
 
+    uint32_t curNodeId = GetNode()->GetId();
+
     // Check if the packet has returned to the original sender node
     for (Ipv4Address ipv4 : m_ipv4Addresses)
     {
         if (p2pPacket.GetSenderIp() == ipv4)
         {
-            NS_LOG_INFO("Back to sender peer " << ipv4);
+            NS_LOG_INFO("\nBACK AT THE SENDER NODE. IP IS " << ipv4 << " | NODE ID IS "
+                                                            << curNodeId);
             return; // Stop processing since we don't need to forward it back to the sender
         }
     }
@@ -268,7 +301,7 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
                             << p2pPacket.GetMessageType());
 
     // Check if the current node is the intended sink node or if it's a QUERY_HIT packet
-    uint32_t curNodeId = GetNode()->GetId();
+
     bool isSinkNode = (p2pPacket.GetMessageType() == QUERY && p2pPacket.GetSinkNode() == curNodeId);
 
     // If the packet is a query that reached the sink node or a query hit, handle it accordingly
@@ -309,9 +342,12 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 //                                UTIL
 // ----------------------------------------------------------------------------
 
-// so right now we have nodeNeighbours and ipv4Addresses. Each of them are linked together on index
-// i i.e at index 0 ipv4Addresses[0] is linked to nodeNeighbours[0] so now we can match the
-// addresses and find the index in nodeNeighbours
+/**
+ * Retrieves the index of a neighbor given its sender's IP address.
+ * Right now we have nodeNeighbours and ipv4Addresses. Each of them are linked together on index i.
+ * For Example at index 0 ipv4Addresses[0] is linked to nodeNeighbours[0] so now we can match the
+ * addresses and find the index in nodeNeighbours
+ */
 int
 P2PApplication::GetNeighbourIndexFromNeighbourIP(Ipv4Address senderIP)
 {
