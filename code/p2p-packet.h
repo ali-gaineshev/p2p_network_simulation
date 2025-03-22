@@ -83,6 +83,7 @@ class P2PPacket : public Header
 
     // change for debuging stuff
     virtual void Print(std::ostream& os) const override;
+    void PrintPath() const;
 };
 } // namespace ns3
 

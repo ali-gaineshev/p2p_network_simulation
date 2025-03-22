@@ -1,5 +1,4 @@
 // packet class and behaviour
-
 #include "p2p-packet.h"
 
 #include "ns3/address-utils.h"
@@ -139,6 +138,29 @@ P2PPacket::Print(std::ostream& os) const
         os << hop << " ";
     }
     os << "]";
+}
+
+// prints path
+void
+P2PPacket::PrintPath() const
+{
+    NS_LOG_INFO("Packet Path: ");
+
+    if (path.empty())
+    {
+        NS_LOG_INFO("  (No path history recorded)");
+        return;
+    }
+
+    for (size_t i = 0; i < path.size(); ++i)
+    {
+        if (i > 0)
+        {
+            std::cout << " -> ";
+        }
+        std::cout << path[i];
+    }
+    std::cout << std::endl;
 }
 
 // path related

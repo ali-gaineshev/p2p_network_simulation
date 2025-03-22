@@ -1,5 +1,8 @@
 #include "p2p-network-builder.h"
 
+#include "ns3/ipv4.h"
+#include "ns3/log.h"
+
 P2PNetwork CreateLinearNetwork(uint32_t);
 P2PNetwork CreateTreeNetwork(uint32_t);
 
@@ -68,14 +71,12 @@ CreateTreeNetwork(uint32_t numNodes)
             NodeContainer nodePair;
             nodePair.Add(allNodes.Get(i));
             nodePair.Add(allNodes.Get(left));
-
             // make net device
             NetDeviceContainer device = p2p.Install(nodePair);
 
             // set IPv4 address
             std::ostringstream baseIP;
             baseIP << "10." << ipCounter << ".1.0";
-            NS_LOG_INFO(baseIP.str());
             address.SetBase(baseIP.str().c_str(), "255.255.255.0");
             Ipv4InterfaceContainer interface = address.Assign(device);
 
@@ -91,13 +92,11 @@ CreateTreeNetwork(uint32_t numNodes)
             NodeContainer nodePair;
             nodePair.Add(allNodes.Get(i));
             nodePair.Add(allNodes.Get(right));
-
             NetDeviceContainer device = p2p.Install(nodePair);
 
             // Assign a unique subnet in the format 10.x.1.0
             std::ostringstream baseIP;
             baseIP << "20." << ipCounter << ".1.0";
-            NS_LOG_INFO(baseIP.str());
             address.SetBase(baseIP.str().c_str(), "255.255.255.0");
             Ipv4InterfaceContainer interface = address.Assign(device);
 
@@ -119,52 +118,30 @@ CreateTreeNetwork(uint32_t numNodes)
     // Assign to P2PNetwork struct
     net.nodes = allNodes;
     net.nodeNeighbors = nodeNeighbors;
+
+    PrintNetworkInfo(net);
+    return net;
 }
 
 void
-PrintNodeInfo(NodeContainer nodes,
-              std::vector<Ipv4Address>& nodeIps,
-              std::vector<std::vector<Ipv4Address>>& nodeNeighbors,
-              uint32_t idx)
+PrintNetworkInfo(const P2PNetwork& net)
 {
-    Ptr<Node> node = nodes.Get(idx);
-    Ptr<Ipv4> ipv4 = node->GetObject<Ipv4>();
+    NS_LOG_INFO("------------------------------");
+    NS_LOG_INFO("Network Information from p2p-network-builder.cc:");
 
-    NS_LOG_INFO("==================================");
-    NS_LOG_INFO("Node " << idx);
-    NS_LOG_INFO("\t Primary IP: " << nodeIps[idx]);
-    NS_LOG_INFO("\t NetDevice Count: " << node->GetNDevices());
-    NS_LOG_INFO("\t Neighbor List:");
-    for (const auto& neighbor : nodeNeighbors[idx])
+    for (uint32_t i = 0; i < net.nodes.GetN(); ++i)
     {
-        NS_LOG_INFO("\t\t --> " << neighbor);
-    }
+        Ptr<Node> node = net.nodes.Get(i);
+        Ptr<Ipv4> ipv4 = node->GetObject<Ipv4>();
 
-    NS_LOG_INFO("\t NetDevices and Interfaces:");
+        NS_LOG_INFO("Node " << i << " | NetDevices: " << ipv4->GetNInterfaces() - 1
+                            << " | Neighbors: " << net.nodeNeighbors[i].size());
 
-    // Iterate over all NetDevices on this node
-    for (uint32_t devIdx = 0; devIdx < node->GetNDevices(); ++devIdx)
-    {
-        Ptr<NetDevice> device = node->GetDevice(devIdx);
-
-        std::string devType = device->GetInstanceTypeId().GetName();
-
-        NS_LOG_INFO("\t Device " << devIdx << ": " << devType);
-
-        // Now look for IP interfaces connected to this NetDevice
-        for (uint32_t ifaceIdx = 0; ifaceIdx < ipv4->GetNInterfaces(); ++ifaceIdx)
-        {
-            // Check if this interface is associated with the current NetDevice
-            if (ipv4->GetNetDevice(ifaceIdx) == device)
-            {
-                NS_LOG_INFO("\t\t Ipv4Interface " << ifaceIdx);
-                uint32_t numAddresses = ipv4->GetNAddresses(ifaceIdx);
-                for (uint32_t addrIdx = 0; addrIdx < numAddresses; ++addrIdx)
-                {
-                    Ipv4InterfaceAddress ifaceAddr = ipv4->GetAddress(ifaceIdx, addrIdx);
-                    NS_LOG_INFO("\t\t\t Address " << addrIdx << ": " << ifaceAddr.GetLocal());
-                }
-            }
+        for (uint32_t j = 1; j < ipv4->GetNInterfaces(); ++j)
+        { // Skip loopback interface
+            NS_LOG_INFO("  Interface " << j << " -> IP: " << ipv4->GetAddress(j, 0).GetLocal()
+                                       << " | Neighbor: " << net.nodeNeighbors[i][j - 1]);
         }
     }
+    NS_LOG_INFO("------------------------------\n");
 }

@@ -2,7 +2,6 @@
 // https://www.sfu.ca/~ljilja/ENSC427/Spring13/Projects/team6/Ensc427_final_project_report.pdf
 // http://computer.howstuffworks.com/file-sharing1.htm
 // http://www2.ensc.sfu.ca/~ljilja/ENSC427/Spring10/Projects/team7/final_report_Gnutella.pdf
-
 #include "p2p-application.h"
 
 #include "p2p-packet.h"
@@ -24,6 +23,10 @@
 #include "ns3/ipv4-routing-table-entry.h"
 #include "ns3/ipv4-static-routing.h"
 
+// global variables
+#define DEFAULT_TTL 5
+#define DEFALT_PORT 5000
+
 // logging/debugging purposes
 NS_LOG_COMPONENT_DEFINE("P2PApplication");
 
@@ -33,83 +36,14 @@ namespace ns3
 NS_OBJECT_ENSURE_REGISTERED(P2PApplication);
 
 P2PApplication::P2PApplication()
-    : m_port(5000),
-      messageIdCount(0)
+    : m_port(DEFALT_PORT)
 {
 }
 
 P2PApplication::P2PApplication(uint16_t port)
-    : m_port(port),
-      messageIdCount(0)
+    : m_port(port)
 {
 } // Custom constructor NEED TO LOOK INTO THIS WARNINGS
-
-// keeps a counter of the messages to generate a unique message id
-uint32_t
-P2PApplication::GenerateMessageId()
-{
-    return messageIdCount++;
-}
-
-// called on start, binds each ip with a port to recieve and send from
-void
-P2PApplication::StartApplication()
-{
-    if (!m_socket)
-    {
-        TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");
-        m_socket = Socket::CreateSocket(GetNode(), tid);
-        if (!m_socket)
-        {
-            NS_LOG_ERROR("socket creation failed for node "
-                         << GetNode()->GetObject<Ipv4>()->GetAddress(1, 0).GetLocal());
-            return;
-        }
-
-        // bind a udp socket (bidirectional) to each node address
-        Ipv4Address localAddress = GetNode()->GetObject<Ipv4>()->GetAddress(1, 0).GetLocal();
-        m_socket->Bind(InetSocketAddress(localAddress, m_port));
-        // DEBUG -> checking if socket has been bound correctly to the port
-        // if (m_socket->Bind(InetSocketAddress(localAddress, m_port)) == -1)
-        // {
-        //     NS_LOG_ERROR("socket bind failed on node " << localAddress);
-        // }
-        // else
-        // {
-        //     NS_LOG_INFO("socket successfully bound on node " << localAddress);
-        // }
-
-        // when a packet is sent, autocall the recieve packet function to locally deal with logic
-        m_socket->SetRecvCallback(MakeCallback(&P2PApplication::RecievePacket, this));
-        // NS_LOG_INFO("Receive callback successfully set on node " << GetNode()->GetId() << " on ip
-        // " << localAddress);
-    }
-}
-
-// on stop, close all sockets
-void
-P2PApplication::StopApplication()
-{
-    if (m_socket)
-    {
-        m_socket->Close();
-        m_socket = nullptr;
-    }
-}
-
-// after neighbours are set in network sim, init peers as neighbouts
-void
-P2PApplication::SetPeers(std::vector<Ipv4Address> neighbours)
-{
-    m_neighbours = neighbours;
-
-    // DEBUG -> test to see what the peers are after setting neighbours
-    NS_LOG_INFO("set peers " << GetNode()->GetObject<Ipv4>()->GetAddress(1, 0).GetLocal());
-    for (const auto& neighbor : m_neighbours)
-    {
-        NS_LOG_INFO("  -> Neighbor: " << neighbor);
-    }
-}
 
 TypeId
 P2PApplication::GetTypeId()
@@ -121,118 +55,139 @@ P2PApplication::GetTypeId()
     return tid;
 }
 
-// when QueryHit or QueryForwarding are called, will add a route to the previous node
+// called on start, binds each ip with a port to recieve and send from
 void
-P2PApplication::AddReverseRoute(Ipv4Address nextHop)
+P2PApplication::StartApplication()
 {
-    if (nextHop == Ipv4Address("0.0.0.0"))
-    {
-        NS_LOG_WARN("invalid nextHop address.");
-        return;
-    }
-    // get ipv4 object and protocol. cast the protocol to ipv4routing
-    Ptr<Ipv4> ipv4 = GetNode()->GetObject<Ipv4>();
-    Ptr<Ipv4RoutingProtocol> routing = ipv4->GetRoutingProtocol();
-    Ptr<Ipv4ListRouting> listRouting = DynamicCast<Ipv4ListRouting>(routing);
+    Ptr<Node> node = GetNode();
+    Ptr<Ipv4> ipv4 = node->GetObject<Ipv4>();
 
-    if (listRouting)
+    for (uint32_t i = 1; i < ipv4->GetNInterfaces(); i++)
     {
-        Ptr<Ipv4StaticRouting> staticRouting;
-        // iterate through routing protocols to find static routing
-        for (uint32_t i = 0; i < listRouting->GetNRoutingProtocols(); ++i)
+        TypeId tid = TypeId::LookupByName("ns3::UdpSocketFactory");
+        Ptr<Socket> socket = Socket::CreateSocket(GetNode(), tid);
+        Ipv4Address address = ipv4->GetAddress(i, 0).GetLocal();
+
+        if (address != Ipv4Address::GetZero())
+        { // Only bind to valid addresses
+            InetSocketAddress local = InetSocketAddress(address, m_port);
+            socket->Bind(local);
+            socket->SetRecvCallback(MakeCallback(&P2PApplication::RecievePacket, this));
+            m_sockets.push_back(socket);
+        }
+    }
+
+    // debug
+    // PrintSocketBindings();
+}
+
+// on stop, close all sockets
+void
+P2PApplication::StopApplication()
+{
+    for (Ptr<Socket> m_socket : m_sockets)
+    {
+        if (m_socket)
         {
-            int16_t priority;
-            Ptr<Ipv4RoutingProtocol> protocol = listRouting->GetRoutingProtocol(i, priority);
-            staticRouting = DynamicCast<Ipv4StaticRouting>(protocol);
-            if (staticRouting)
-            {
-                // add route to nexthop through interface 1
-                staticRouting->AddHostRouteTo(nextHop, 1);
-                return;
-            }
+            m_socket->Close();
+            m_socket = nullptr;
         }
     }
 }
 
-// once there is a hit, process and forward backward through the path
+// after neighbours are set in network sim, init peers as neighbouts
 void
-P2PApplication::QueryHit(P2PPacket ppacket)
+P2PApplication::SetPeers(std::vector<Ipv4Address> neighbours)
 {
-    Ipv4Address curaddy = GetNode()->GetObject<Ipv4>()->GetAddress(1, 0).GetLocal();
-    NS_LOG_INFO("in QH: curaddy " << curaddy << " prevhop " << ppacket.GetLastHop() << " type "
-                                  << ppacket.GetMessageType());
+    m_neighbours = neighbours;
+}
 
-    // base case -> at the og addy
-    if (ppacket.GetSenderIp() == curaddy)
+// sets node's ipv4 addresses. each ipv4 address index i corresponds to nodeNeighbours at i
+void
+P2PApplication::SetAddresses()
+{
+    m_ipv4Addresses.clear(); // Clear any previous addresses
+
+    Ptr<Ipv4> ipv4 = GetNode()->GetObject<Ipv4>();
+
+    for (uint32_t i = 1; i < ipv4->GetNInterfaces(); i++)
     {
-        NS_LOG_INFO("query made it back to sender at " << curaddy);
-        return;
+        Ipv4Address address = ipv4->GetAddress(i, 0).GetLocal();
+
+        if (address != Ipv4Address::GetZero()) // Avoid empty addresses
+        {
+            m_ipv4Addresses.push_back(address);
+        }
     }
-    // if not at og addy remove last hop, add backward route, change type, forward
-    Ipv4Address nextHop = ppacket.GetLastHop();
-    AddReverseRoute(nextHop);
-    ppacket.SetMessageType(QUERY_HIT);
-    ppacket.RemoveLastHop();
-    ppacket.SetTtl(ppacket.GetTtl() + 2);
-    ppacket.SetDestIp(nextHop);
-    Ptr<Packet> newPacket = Create<Packet>();
-    newPacket->AddHeader(ppacket);
-    // forward the packet to the previous hop
-    NS_LOG_INFO("QH from " << curaddy << " back to " << nextHop << " type "
-                           << ppacket.GetMessageType() << " with ttl " << (int)ppacket.GetTtl());
-    m_socket->SendTo(newPacket, 0, InetSocketAddress(nextHop, m_port));
+    // DEBUG
+    // PrintAddresses();
 }
 
 // logic for backward forwarding when there is a query hit
 void
-P2PApplication::ForwardQueryHit(P2PPacket ppacket)
+P2PApplication::ForwardQueryHit(P2PPacket ppacket, int lastHopIndex)
 {
-    Ipv4Address curaddy = GetNode()->GetObject<Ipv4>()->GetAddress(1, 0).GetLocal();
-    NS_LOG_INFO("in FQH: curaddy " << curaddy << " prevhop " << ppacket.GetLastHop() << " type "
-                                   << ppacket.GetMessageType());
+    Ipv4Address lastHopIPV4 = m_neighbours[lastHopIndex];
+    Ipv4Address curIPV4 = m_ipv4Addresses[lastHopIndex];
 
-    // packet is back at sender
-    if (ppacket.GetSenderIp() == curaddy)
+    if (ppacket.GetSenderIp() == curIPV4)
     {
-        NS_LOG_INFO("back to sender peer " << curaddy);
+        NS_LOG_INFO("back to sender peer " << curIPV4);
         return;
     }
-    // if not at og addy remove last hop, add backward route, forward
-    Ipv4Address nextHop = ppacket.GetLastHop();
+    ppacket.SetMessageType(QUERY_HIT);
+    ppacket.SetDestIp(lastHopIPV4);
     ppacket.RemoveLastHop();
-    AddReverseRoute(nextHop);
+    ppacket.SetTtl(ppacket.GetTtl() + 2);
+
     Ptr<Packet> newPacket = Create<Packet>();
     newPacket->AddHeader(ppacket);
     // forward the packet to the previous hop
-    NS_LOG_INFO("FQH from " << curaddy << " to " << nextHop << " with ttl "
-                            << (int)ppacket.GetTtl());
-    m_socket->SendTo(newPacket, 0, InetSocketAddress(nextHop, m_port));
+    NS_LOG_INFO("FQH from " << curIPV4 << " back to " << lastHopIPV4 << " type "
+                            << ppacket.GetMessageType() << " with ttl " << (int)ppacket.GetTtl());
+    m_sockets[lastHopIndex]->SendTo(newPacket, 0, InetSocketAddress(lastHopIPV4, m_port));
 }
 
-// packet sends a query to find sink node
+// packet sends a query to find sink node via FLOOD
 void
-P2PApplication::SendQuery(uint32_t sinknode)
+P2PApplication::Flood(uint32_t sinknode)
 {
-    Ipv4Address curaddy = GetNode()->GetObject<Ipv4>()->GetAddress(1, 0).GetLocal();
-    for (const auto& neighbor : m_neighbours)
+    for (int i = 0; i < m_ipv4Addresses.size(); ++i)
     {
-        SendPacket(QUERY, neighbor, 5, curaddy, sinknode);
+        Ipv4Address curIPV4 = m_ipv4Addresses[i];
+        Ipv4Address curNeighbor = m_neighbours[i];
+
+        SendPacket(QUERY, curNeighbor, DEFAULT_TTL, curIPV4, sinknode, i);
     }
 }
 
-// ping gets current address, and calls sendpacket for each neighbour
 void
-P2PApplication::SendPing()
+P2PApplication::FloodButNotAll(P2PPacket p2pPacket, int excludeIndex)
 {
-    Ipv4Address curaddy = GetNode()->GetObject<Ipv4>()->GetAddress(1, 0).GetLocal();
-    NS_LOG_INFO("Current neighbors: ");
-    for (const auto& neighbor : m_neighbours)
+    for (int i = 0; i < m_ipv4Addresses.size(); ++i)
     {
-        NS_LOG_INFO("SendingNode: " << curaddy);
-        if (neighbor != curaddy)
+        if (i == excludeIndex)
         {
-            // set sink node -1 becuase its a ping
-            SendPacket(PING, neighbor, 5, curaddy, -1);
+            continue;
+        }
+
+        Ipv4Address curIPV4 = m_ipv4Addresses[i];
+        Ipv4Address curNeighbor = m_neighbours[i];
+
+        if (curNeighbor != p2pPacket.GetSenderIp())
+        {
+            // Create a copy of the packet before modifying
+            P2PPacket packetCopy = p2pPacket;
+            packetCopy.AddToPath(curIPV4);
+
+            Ptr<Packet> newPacket = Create<Packet>();
+            newPacket->AddHeader(packetCopy); // Attach the updated copy
+
+            NS_LOG_INFO("rp: forwarding packet from " << curIPV4 << " to " << curNeighbor);
+            packetCopy.PrintPath();
+            NS_LOG_INFO("----------\n");
+
+            m_sockets[i]->SendTo(newPacket, 0, InetSocketAddress(curNeighbor, m_port));
         }
     }
 }
@@ -242,19 +197,20 @@ void
 P2PApplication::SendPacket(MessageType type,
                            Ipv4Address dest,
                            uint8_t ttl,
-                           Ipv4Address curaddy,
-                           uint32_t sinkn)
+                           Ipv4Address curIP,
+                           uint32_t sinkn,
+                           int neighbourIndex)
 {
     Ptr<Packet> packet = Create<Packet>();
-    uint32_t msgid = GenerateMessageId();
+    uint32_t msgid = 0;
     // start hop at 0, and path at empty
-    P2PPacket p2pPacket(type, msgid, curaddy, dest, ttl, 0, sinkn, {});
-    p2pPacket.AddToPath(curaddy);
+    P2PPacket p2pPacket(type, msgid, curIP, dest, ttl, 0, sinkn, {});
+    p2pPacket.AddToPath(curIP);
     packet->AddHeader(p2pPacket);
 
     // Send packet over the socket (how ns3 sends stuff)
-    m_socket->SendTo(packet, 0, InetSocketAddress(dest, m_port));
-    NS_LOG_INFO("Sent " << type << " packet to " << dest);
+    m_sockets[neighbourIndex]->SendTo(packet, 0, InetSocketAddress(dest, m_port));
+    NS_LOG_INFO("Sent " << type << " packet to " << dest << " from " << curIP);
 }
 
 // handles logic when reciveing a packet
@@ -264,67 +220,158 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     Ptr<Packet> packet = socket->Recv();
     P2PPacket p2pPacket;
     packet->RemoveHeader(p2pPacket);
-    Ipv4Address curaddy = GetNode()->GetObject<Ipv4>()->GetAddress(1, 0).GetLocal();
-    NS_LOG_INFO("\nrp: at " << curaddy << " from " << p2pPacket.GetLastHop() << " of type "
-                            << p2pPacket.GetMessageType() << " messageId "
-                            << p2pPacket.GetMessageId());
+
+    // need to check if received to src node with query hit
+    for (Ipv4Address ipv4 : m_ipv4Addresses)
+    {
+        if (p2pPacket.GetSenderIp() == ipv4)
+        {
+            NS_LOG_INFO("back to sender peer " << ipv4);
+            return;
+        }
+    }
+
+    Ipv4Address senderIP = p2pPacket.GetLastHop();
+    int senderIndex = GetNeighbourIndexFromNeighbourIP(senderIP);
+    // at this point we have an index of a neighbour that it was sent from
+    // we have all addresses and neighbours so we need to send packets to all except for that index
+
+    Ipv4Address curIP = m_ipv4Addresses[senderIndex];
+    NS_LOG_INFO("\nrp: at " << curIP << " from " << senderIP << " of type "
+                            << p2pPacket.GetMessageType());
 
     // check if query / sinknode reached
     uint32_t curNodeId = GetNode()->GetId();
     if (p2pPacket.GetMessageType() == QUERY && p2pPacket.GetSinkNode() == curNodeId)
     {
         NS_LOG_INFO("rp: query hit at " << curNodeId << " !!!!!!");
-        QueryHit(p2pPacket);
+        ForwardQueryHit(p2pPacket, senderIndex);
         return;
     }
-    // else check if the message is a query hit, send to forward for proper logic
+    // if query hit the path structure is different
     if (p2pPacket.GetMessageType() == QUERY_HIT)
     {
-        ForwardQueryHit(p2pPacket);
+        ForwardQueryHit(p2pPacket, senderIndex);
         return;
     }
     // drop packet if TTL is already 0 before processing further
     if (p2pPacket.GetTtl() == 0)
     {
-        NS_LOG_INFO("TTL 0, dropping packet at " << curaddy);
+        NS_LOG_INFO("TTL 0, dropping packet at " << curIP);
         return;
+    }
+
+    // check if node has any neighbours at all (except for the one that it was sent from)
+    if (m_neighbours.size() == 1)
+    {
+        NS_LOG_INFO("rp: at " << curIP << " from " << senderIP << " of type "
+                              << p2pPacket.GetMessageType()
+                              << " Dropping the packet since no new neighbours");
     }
     // decrement TTL before forwarding
     p2pPacket.DecrementTtl();
 
     // forward the packet to the neighbours
-    for (const auto& neighbor : m_neighbours)
-    {
-        if (neighbor == curaddy)
-        {
-            NS_LOG_WARN("rp: skipping self-forwarding for " << curaddy);
-            continue;
-        }
-        if (neighbor != p2pPacket.GetSenderIp() && neighbor != p2pPacket.GetLastHop())
-        {
-            // update previous hop and attach to packet
-            Ptr<Packet> newPacket = Create<Packet>();
-            p2pPacket.AddToPath(curaddy);
-            newPacket->AddHeader(p2pPacket);
+    FloodButNotAll(p2pPacket, senderIndex);
+}
 
-            NS_LOG_INFO("rp: forwarding packet from " << curaddy << " to " << neighbor);
-            m_socket->SendTo(newPacket, 0, InetSocketAddress(neighbor, m_port));
-        }
-        else
+// so right now we have nodeNeighbours and ipv4Addresses. Each of them are linked together on index
+// i i.e at index 0 ipv4Addresses[0] is linked to nodeNeighbours[0] so now we can match the
+// addresses and find the index in nodeNeighbours
+int
+P2PApplication::GetNeighbourIndexFromNeighbourIP(Ipv4Address senderIP)
+{
+    // Loop through the list of IPv4 addresses
+    int index = 0;
+    for (Ipv4Address ip : m_neighbours)
+    {
+        // If the IP matches, return the index
+        if (ip == senderIP)
         {
-            continue;
+            return index;
         }
+        index++;
     }
+
+    // Log if no match was found, SHOULD NOT REACH THIS POINT AT ALL
+    NS_LOG_ERROR("ERROR: Could not find a match for sender IP: " << senderIP);
+    throw std::runtime_error("ERROR: Sender IP not found in the neighbor list.");
 }
 
 // virtual destructor to cklean this (need this to run for the headerhaving ~ declared. missing a
 // vtable otherwise)
 P2PApplication::~P2PApplication()
 {
-    if (m_socket)
+    StopApplication();
+}
+
+// DEBUG functions
+
+void
+P2PApplication::LogNodeInfo()
+{
+    uint32_t nodeId = GetNode()->GetId();
+    NS_LOG_INFO("Node " << nodeId << " Information:");
+
+    // Log IP addresses
+    for (size_t i = 0; i < m_ipv4Addresses.size(); i++)
     {
-        m_socket->Close();
-        m_socket = nullptr;
+        NS_LOG_INFO("  IP Address " << i << " - " << m_ipv4Addresses[i]);
+    }
+
+    // Log neighbors
+    for (size_t i = 0; i < m_neighbours.size(); i++)
+    {
+        NS_LOG_INFO("  Node Neighbour " << i << " - " << m_neighbours[i]);
+    }
+
+    // Log sockets
+    for (size_t i = 0; i < m_sockets.size(); i++)
+    {
+        if (m_sockets[i])
+        {
+            Address localAddr;
+            m_sockets[i]->GetSockName(localAddr);
+            NS_LOG_INFO("  Socket " << i << " - "
+                                    << InetSocketAddress::ConvertFrom(localAddr).GetIpv4() << ":"
+                                    << InetSocketAddress::ConvertFrom(localAddr).GetPort());
+        }
+        else
+        {
+            NS_LOG_INFO("  Socket " << i << " - NULL (not initialized)");
+        }
+    }
+}
+
+// prints socket information
+void
+P2PApplication::PrintSocketBindings()
+{
+    NS_LOG_INFO("Total Sockets: " << m_sockets.size());
+
+    for (size_t i = 0; i < m_sockets.size(); i++)
+    {
+        Ptr<Socket> socket = m_sockets[i];
+        Address localAddress;
+        socket->GetSockName(localAddress);
+
+        InetSocketAddress inetAddr = InetSocketAddress::ConvertFrom(localAddress);
+        Ipv4Address ip = inetAddr.GetIpv4();
+        uint16_t port = inetAddr.GetPort();
+
+        NS_LOG_INFO("Socket " << i << " bound to IP: " << ip << " Port: " << port);
+    }
+}
+
+// prints ipv4 addresses
+void
+P2PApplication::PrintAddresses()
+{
+    NS_LOG_INFO("Node " << GetNode()->GetId() << " IP Addresses:");
+
+    for (const auto& addr : m_ipv4Addresses)
+    {
+        NS_LOG_INFO(" - " << addr);
     }
 }
 

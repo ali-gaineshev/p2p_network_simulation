@@ -24,4 +24,6 @@ struct P2PNetwork
 
 P2PNetwork CreateP2PNetwork(NetworkType networkType, uint32_t numNodes);
 
+void PrintNetworkInfo(const P2PNetwork& net);
+
 #endif

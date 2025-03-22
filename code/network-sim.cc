@@ -16,6 +16,31 @@
 using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("P2PNetworkSim");
 
+void
+PositionTreeNodes(uint32_t nodeIndex,
+                  double x,
+                  double y,
+                  double xOffset,
+                  double yOffset,
+                  AnimationInterface& anim,
+                  NodeContainer& nodes)
+{
+    uint32_t numNodes = nodes.GetN();
+    if (nodeIndex == numNodes)
+        return;
+
+    anim.SetConstantPosition(nodes.Get(nodeIndex), x, y);
+
+    uint32_t leftChild = 2 * nodeIndex + 1;
+    uint32_t rightChild = 2 * nodeIndex + 2;
+
+    if (leftChild < numNodes)
+        PositionTreeNodes(leftChild, x - xOffset, y + yOffset, xOffset / 2, yOffset, anim, nodes);
+
+    if (rightChild < numNodes)
+        PositionTreeNodes(rightChild, x + xOffset, y + yOffset, xOffset / 2, yOffset, anim, nodes);
+}
+
 int
 main(int argc, char* argv[])
 {
@@ -27,19 +52,18 @@ main(int argc, char* argv[])
     LogComponentEnable("P2PNetworkSim", LOG_LEVEL_INFO);
     LogComponentEnable("P2PPacket", LOG_LEVEL_INFO);
     LogComponentEnable("P2PApplication", LOG_LEVEL_INFO);
+    LogComponentEnable("NetworkBuilder", LOG_LEVEL_INFO);
 
     // GLOBAL VARIABLES
-    uint32_t numNodes = 5;
+    uint32_t numNodes = 10;
     int srcIndex = 0;
-    int sinkIndex = 3;
+    int sinkIndex = 9;
 
     NS_LOG_INFO("Starting P2P simulation...");
     P2PNetwork net = CreateP2PNetwork(TREE, numNodes);
-
     // Enable global routing so different subnets can communicate
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();
 
-    NS_LOG_INFO("SIZE: " + net.nodes.GetN());
     // Install the P2PApplication for each node
     for (uint32_t i = 0; i < net.nodes.GetN(); ++i)
     {
@@ -47,8 +71,10 @@ main(int argc, char* argv[])
         net.nodes.Get(i)->AddApplication(app);
         app->SetStartTime(Seconds(1.0));
         app->SetStopTime(Seconds(10.0)); // adjust runtime
-
+        app->SetAddresses();
         app->SetPeers(net.nodeNeighbors[i]);
+        // logger
+        Simulator::Schedule(Seconds(1.1), &P2PApplication::LogNodeInfo, app);
     }
 
     // DEBUGGING -> to show all underlying ipv4 protocol logs (helps to see if packet being dropped)
@@ -56,9 +82,9 @@ main(int argc, char* argv[])
 
     // Simulate query from node 0 to node 4
     Simulator::Schedule(Seconds(8.0),
-                        MakeEvent(&P2PApplication::SendQuery,
+                        MakeEvent(&P2PApplication::Flood,
                                   DynamicCast<P2PApplication>(net.nodes.Get(0)->GetApplication(0)),
-                                  8));
+                                  sinkIndex));
 
     // Create XML animation file
     AnimationInterface anim("p2p-network-routing.xml");
@@ -68,11 +94,7 @@ main(int argc, char* argv[])
     anim.UpdateNodeDescription(sinkIndex, "Sink");
     anim.UpdateNodeColor(sinkIndex, 0, 0, 255);
 
-    anim.SetConstantPosition(net.nodes.Get(0), 45.5, 1.0);
-    anim.SetConstantPosition(net.nodes.Get(1), 40.0, 10.0);
-    anim.SetConstantPosition(net.nodes.Get(2), 50.0, 10.0);
-    anim.SetConstantPosition(net.nodes.Get(3), 37.0, 20.0);
-    anim.SetConstantPosition(net.nodes.Get(4), 43.0, 20.0);
+    PositionTreeNodes(0, 45.5, 1.0, 15, 15, anim, net.nodes);
 
     Simulator::Run();
     Simulator::Destroy();
