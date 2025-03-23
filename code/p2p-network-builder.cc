@@ -5,6 +5,7 @@
 #include "ns3/ipv4.h"
 #include "ns3/log.h"
 
+#define NEW_LINK_BASE_IPV4 "40."
 #define LINEAR_BASE_IPV4 "30."
 #define TREE_LEFT_BASE_IPV4 "10."
 #define TREE_RIGHT_BASE_IPV4 "20."
@@ -36,6 +37,48 @@ CreateP2PNetwork(NetworkType networkType, std::vector<uint32_t> numList, NodeCon
         NS_LOG_ERROR("Unsupported network type");
         return P2PNetwork();
     }
+}
+
+P2PNetwork
+AddNewNodeToExistingNet(P2PNetwork& net, int nodeIndex)
+{
+    int currentNetSize = net.nodes.GetN();
+
+    if (nodeIndex < 0 || nodeIndex >= currentNetSize)
+    {
+        throw std::runtime_error("Invalid params in network builder");
+    }
+
+    Ptr<Node> newNode = CreateObject<Node>();
+    net.nodes.Add(newNode);
+
+    // Install internet stack on the new node
+    InternetStackHelper internet;
+    internet.Install(newNode);
+
+    // Create a point-to-point connection between new node and the specified existing node
+    PointToPointHelper p2p;
+    p2p.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+    p2p.SetChannelAttribute("Delay", StringValue("2ms"));
+
+    NodeContainer nodePair;
+    nodePair.Add(net.nodes.Get(nodeIndex));
+    nodePair.Add(newNode);
+
+    NetDeviceContainer devices = p2p.Install(nodePair);
+    // Assign IPv4 address
+    Ipv4AddressHelper address;
+    std::ostringstream baseIP;
+    baseIP << NEW_LINK_BASE_IPV4 << currentNetSize + 1 << ".1.0"; // Unique subnet (hopefully)
+    address.SetBase(baseIP.str().c_str(), NETWORK_MASK);
+    Ipv4InterfaceContainer interfaces = address.Assign(devices);
+
+    net.nodeNeighbors.resize(net.nodes.GetN());
+    net.nodeNeighbors[nodeIndex].push_back(interfaces.GetAddress(1));
+    net.nodeNeighbors[currentNetSize].push_back(interfaces.GetAddress(0));
+
+    NS_LOG_INFO("Added new node to the network");
+    return net;
 }
 
 P2PNetwork
@@ -87,54 +130,6 @@ CreateCombinedLinearTreeNetwork(uint32_t linearNumNodes,
     P2PUtil::PrintNetworkInfo(net);
     return net;
 }
-
-// Ptr<Node> linearLastNode = linearNet.nodes.Get(linearNumNodes - 1);
-// Ptr<Node> treeFirstNode = treeNet.nodes.Get(0);
-
-// // base ipv4 for the new connection
-// std::ostringstream baseIPForBridgeConnection;
-// baseIPForBridgeConnection << LINEAR_BASE_IPV4 << std::to_string(linearNumNodes)
-//                           << BASE_IPV4_ENDING;
-
-// // create a bridge between linear and tree topologies
-// NodeContainer nodeBridge;
-// nodeBridge.Add(linearLastNode);
-// nodeBridge.Add(treeFirstNode);
-
-// // Install internet stack
-// InternetStackHelper internet;
-// internet.Install(nodeBridge);
-
-// // Point-to-Point helper for connections
-// PointToPointHelper p2p;
-// p2p.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
-// p2p.SetChannelAttribute("Delay", StringValue("2ms"));
-
-// NetDeviceContainer device = p2p.Install(nodeBridge);
-// Ipv4AddressHelper address;
-// address.SetBase(baseIPForBridgeConnection.str().c_str(), NETWORK_MASK);
-// Ipv4InterfaceContainer interface = address.Assign(device);
-
-// //
-// linearNet.nodeNeighbors[linearNumNodes - 1].push_back(interface.GetAddress(1));
-// treeNet.nodeNeighbors[0].push_back(interface.GetAddress(0));
-
-// net.nodes.Add(linearNet.nodes);
-// net.nodes.Add(nodeBridge);
-// net.nodes.Add(treeNet.nodes);
-
-// net.nodeNeighbors.reserve(linearNet.nodeNeighbors.size() + treeNet.nodeNeighbors.size());
-// net.nodeNeighbors.insert(net.nodeNeighbors.end(),
-//                          linearNet.nodeNeighbors.begin(),
-//                          linearNet.nodeNeighbors.end());
-// net.nodeNeighbors.insert(net.nodeNeighbors.end(),
-//                          treeNet.nodeNeighbors.begin(),
-//                          treeNet.nodeNeighbors.end());
-
-// NS_LOG_INFO(net.nodes.GetN());
-// NS_LOG_INFO(net.nodeNeighbors.size());
-// P2PUtil::PrintNetworkInfo(net);
-// return net;
 
 P2PNetwork
 CreateLinearNetwork(uint32_t numNodes)

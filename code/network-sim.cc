@@ -40,22 +40,22 @@ main(int argc, char* argv[])
     // numList will usually take first value in the list when it creates a topology
     // the idea is for combined structure, you will specify how many nodes in each topology
     // there will be. For combined Linear_TREE topology, first value is linear and then tree
-    std::vector<uint32_t> nodeNumList = {5, 10};
-    int srcIndex = 0;
-    int sinkIndex = 12; // sum up nodeNumList to find how many indecies work
-    NetworkType networkType = COMBINED_LINEAR_TREE;
+    // std::vector<uint32_t> nodeNumList = {2, 10};
+    // int srcIndex = 0;
+    // int sinkIndex = 12; // sum up nodeNumList to find how many indecies work
+    // NetworkType networkType = COMBINED_LINEAR_TREE;
 
-    NodeContainer treeNodes; // need a reference for a tree to plot it in netAnim. Still use
-                             // net.nodes for the whole toplogy
-    P2PNetwork net = CreateP2PNetwork(networkType, nodeNumList, treeNodes);
+    // NodeContainer treeNodes; // need a reference for a tree to plot it in netAnim. Still use
+    //                          // net.nodes for the whole toplogy
+    // P2PNetwork net = CreateP2PNetwork(networkType, nodeNumList, treeNodes);
 
     /* JUST TREE*/
-    // std::vector<uint32_t> nodeNumList = {10};
-    // int srcIndex = 0;
-    // int sinkIndex = 9;
-    // NetworkType networkType = TREE;
-    // NodeContainer treeNodes;
-    // P2PNetwork net = CreateP2PNetwork(networkType, nodeNumList, treeNodes);
+    std::vector<uint32_t> nodeNumList = {250};
+    int srcIndex = 0;
+    int sinkIndex = 249;
+    NetworkType networkType = TREE;
+    NodeContainer treeNodes;
+    P2PNetwork net = CreateP2PNetwork(networkType, nodeNumList, treeNodes);
 
     //  Enable global routing so different subnets can communicate
     Ipv4GlobalRoutingHelper::PopulateRoutingTables();

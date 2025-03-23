@@ -21,10 +21,13 @@ namespace ns3
 class P2PApplication : public Application
 {
   private:
+    // at index i
+    //
     std::vector<Ptr<Socket>> m_sockets;
-    std::vector<Ipv4Address> m_ipv4Addresses;
-    std::vector<Ipv4Address> m_neighbours;
+    std::vector<Ipv4Address> m_ipv4Addresses; // its node's  a
+    std::vector<Ipv4Address> m_neighbours;    //
     std::map<uint32_t, Ipv4Address> m_queryCache;
+
     uint32_t messageIdCount;
     uint32_t m_port;
     uint32_t GenerateMessageId();

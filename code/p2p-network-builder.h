@@ -27,4 +27,6 @@ P2PNetwork CreateP2PNetwork(NetworkType networkType,
                             std::vector<uint32_t> numList,
                             NodeContainer& treeNodes);
 
+P2PNetwork AddNewNodeToExistingNet(P2PNetwork& net, int nodeIndex);
+
 #endif

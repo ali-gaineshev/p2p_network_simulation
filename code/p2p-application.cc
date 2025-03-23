@@ -25,7 +25,7 @@
 #include "ns3/ipv4-static-routing.h"
 
 // global variables
-#define DEFAULT_TTL 5
+#define DEFAULT_TTL 999
 #define DEFALT_PORT 5000
 
 // logging/debugging purposes
