@@ -9,6 +9,25 @@ NS_LOG_COMPONENT_DEFINE("Util");
 namespace ns3
 {
 
+void
+P2PUtil::PositionLinearNodes(int curIndex,
+                             double x,
+                             double y,
+                             double xOffset,
+                             AnimationInterface& anim,
+                             NodeContainer& nodes,
+                             int totalLinearNodes)
+{
+    if (curIndex == totalLinearNodes)
+    {
+        return;
+    }
+
+    anim.SetConstantPosition(nodes.Get(curIndex), x, y);
+
+    PositionLinearNodes(curIndex + 1, x + xOffset, y, xOffset, anim, nodes, totalLinearNodes);
+}
+
 // Positions Nodes in NetAnim --------------------------------------- network-sim.cc
 void
 P2PUtil::PositionTreeNodes(uint32_t nodeIndex,
@@ -22,7 +41,7 @@ P2PUtil::PositionTreeNodes(uint32_t nodeIndex,
     uint32_t numNodes = nodes.GetN();
     if (nodeIndex == numNodes)
         return;
-
+    NS_LOG_INFO("currently at " << nodeIndex << " | nodes length is " << nodes.GetN());
     anim.SetConstantPosition(nodes.Get(nodeIndex), x, y);
 
     uint32_t leftChild = 2 * nodeIndex + 1;
@@ -44,7 +63,7 @@ P2PUtil::PrintNodeInfo(Ptr<P2PApplication> app)
     auto sockets = app->GetSockets();
 
     uint32_t nodeId = app->GetNode()->GetId();
-    NS_LOG_INFO("Node " << nodeId << " Information:");
+    NS_LOG_INFO("Node ID " << nodeId << " Information:");
 
     for (size_t i = 0; i < ipv4Addresses.size(); i++)
     {
@@ -118,7 +137,8 @@ P2PUtil::PrintNetworkInfo(const P2PNetwork& net)
         Ptr<Node> node = net.nodes.Get(i);
         Ptr<Ipv4> ipv4 = node->GetObject<Ipv4>();
 
-        NS_LOG_INFO("Node " << i << " | NetDevices: " << ipv4->GetNInterfaces() - 1
+        NS_LOG_INFO("Node " << i << " | Node ID - " << node->GetId()
+                            << " | NetDevices: " << ipv4->GetNInterfaces() - 1
                             << " | Neighbors: " << net.nodeNeighbors[i].size());
 
         for (uint32_t j = 1; j < ipv4->GetNInterfaces(); ++j)

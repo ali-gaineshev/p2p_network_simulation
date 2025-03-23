@@ -14,6 +14,13 @@ class P2PApplication; // Forward declaration
 class P2PUtil
 {
   public:
+    static void PositionLinearNodes(int curIndex,
+                                    double x,
+                                    double y,
+                                    double xOffset,
+                                    AnimationInterface& anim,
+                                    NodeContainer& nodes,
+                                    int totalLinearNodes);
     static void PositionTreeNodes(uint32_t nodeIndex,
                                   double x,
                                   double y,
