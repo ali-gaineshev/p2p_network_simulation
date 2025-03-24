@@ -41,7 +41,6 @@ P2PUtil::PositionTreeNodes(uint32_t nodeIndex,
     uint32_t numNodes = nodes.GetN();
     if (nodeIndex == numNodes)
         return;
-    NS_LOG_INFO("currently at " << nodeIndex << " | nodes length is " << nodes.GetN());
     anim.SetConstantPosition(nodes.Get(nodeIndex), x, y);
 
     uint32_t leftChild = 2 * nodeIndex + 1;

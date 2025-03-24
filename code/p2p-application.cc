@@ -26,7 +26,7 @@
 #include "ns3/ipv4-static-routing.h"
 
 // global variables
-#define DEFAULT_TTL 999
+#define DEFAULT_TTL 5
 #define DEFALT_PORT 5000
 
 // for normalized flooding (will be under the min edge number)
@@ -416,6 +416,7 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
         {
             NS_LOG_INFO("\nBACK AT THE SENDER NODE. IP IS " << ipv4 << " | NODE ID IS "
                                                             << curNodeId);
+
             return; // Stop processing since we don't need to forward it back to the sender
         }
     }
