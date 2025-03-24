@@ -61,7 +61,7 @@ class P2PApplication : public Application
     void InitialNormalizedFlood(uint32_t sinknode, int howManyNodes);
     void NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeIndex, int howManyNodes);
     // RANDOM WALKS
-    void InitialRandomWalk(uint32_t sinknode);
+    void InitialRandomWalk(uint32_t sinknode, int k);
     void RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex);
 
     // BACK TRACKING

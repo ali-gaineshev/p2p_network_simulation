@@ -50,9 +50,9 @@ main(int argc, char* argv[])
     // P2PNetwork net = CreateP2PNetwork(networkType, nodeNumList, treeNodes);
 
     /* JUST TREE*/
-    std::vector<uint32_t> nodeNumList = {250};
+    std::vector<uint32_t> nodeNumList = {80};
     int srcIndex = 0;
-    int sinkIndex = 249;
+    int sinkIndex = 20;
     NetworkType networkType = TREE;
     NodeContainer treeNodes;
     P2PNetwork net = CreateP2PNetwork(networkType, nodeNumList, treeNodes);
@@ -77,11 +77,25 @@ main(int argc, char* argv[])
     // LogComponentEnable("Ipv4L3Protocol", LOG_LEVEL_ALL);
 
     // Simulate query from node src to sink index
-    Simulator::Schedule(
-        Seconds(8.0),
-        MakeEvent(&P2PApplication::InitialFlood,
-                  DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
-                  sinkIndex));
+    // Simulator::Schedule(
+    //     Seconds(8.0),
+    //     MakeEvent(&P2PApplication::InitialFlood,
+    //               DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+    //               sinkIndex));
+
+    // simulate random walk query 
+    // Simulator::Schedule(
+    //         Seconds(8.0),
+    //         MakeEvent(&P2PApplication::InitialRandomWalk,
+    //                 DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+    //                 sinkIndex, 10));
+
+    // simulate a normalized floodign query
+    // Simulator::Schedule(
+    //          Seconds(8.0),
+    //          MakeEvent(&P2PApplication::InitialNormalizedFlood,
+    //                  DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+    //                  sinkIndex, 1));
 
     // Create XML animation file
 

@@ -18,7 +18,9 @@ enum MessageType
     PING,
     PONG,
     QUERY,
-    QUERY_HIT
+    QUERY_HIT,
+    QUERY_RW,
+    QUERY_NF
 };
 
 class P2PPacket : public Header
