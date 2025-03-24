@@ -47,6 +47,7 @@ main(int argc, char* argv[])
     // Convert int to enum
     NetworkType networkType = static_cast<NetworkType>(networkTypeInt);
 
+
     // Ensure valid indices
     if (srcIndex < 0 || srcIndex >= (int)nodeNum || sinkIndex < 0 || sinkIndex >= (int)nodeNum)
     {
@@ -73,11 +74,27 @@ main(int argc, char* argv[])
     // LogComponentEnable("Ipv4L3Protocol", LOG_LEVEL_ALL);
 
     // Simulate query from node src to sink index
-    Simulator::Schedule(
-        Seconds(5.0),
-        MakeEvent(&P2PApplication::InitialFlood,
-                  DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
-                  sinkIndex));
+
+    // Simulator::Schedule(
+    //     Seconds(8.0),
+    //     MakeEvent(&P2PApplication::InitialFlood,
+    //               DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+    //               sinkIndex));
+
+    // simulate random walk query 
+    // Simulator::Schedule(
+    //         Seconds(8.0),
+    //         MakeEvent(&P2PApplication::InitialRandomWalk,
+    //                 DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+    //                 sinkIndex, 10));
+
+    // simulate a normalized floodign query
+    // Simulator::Schedule(
+    //          Seconds(8.0),
+    //          MakeEvent(&P2PApplication::InitialNormalizedFlood,
+    //                  DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+    //                  sinkIndex, 1));
+
 
     // Create XML animation file
 

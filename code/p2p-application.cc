@@ -17,6 +17,7 @@
 
 #include <unordered_set>
 #include <vector>
+#include <random>
 
 // for adding routing for backwards forwarding on qh
 #include "ns3/ipv4-list-routing.h"
@@ -27,6 +28,10 @@
 // global variables
 #define DEFAULT_TTL 5
 #define DEFALT_PORT 5000
+
+// for normalized flooding (will be under the min edge number)
+// update this to the initial flood amount sent 
+#define DEFAULT_NODE_AMOUNT 1
 
 // logging/debugging purposes
 NS_LOG_COMPONENT_DEFINE("P2PApplication");
@@ -224,8 +229,32 @@ P2PApplication::FloodExceptSender(P2PPacket p2pPacket, int excludeIndex)
  */
 void
 P2PApplication::InitialNormalizedFlood(uint32_t sinknode,
-                                       int howManyNodes) // feel free to add anything here
+                                       int howManyNodes)
 {
+    // seed for randomness
+    std::random_device rd; 
+    std::mt19937 gen(rd());
+
+    // Create vector of neighbour size, shuffle indices
+    std::vector<int> indices(m_neighbours.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    std::shuffle(indices.begin(), indices.end(), gen);
+
+    for (int i = 0; i < howManyNodes; ++i)
+    {
+        if (m_neighbours.empty())
+        {
+            NS_LOG_WARN("No neighbours");
+            return;
+        }
+        
+        // pick index from randomly shuffled vector (ensures different)
+        int randomIndex = indices[i];
+        Ipv4Address curIP = m_ipv4Addresses[randomIndex];
+        Ipv4Address neighborIP = m_neighbours[randomIndex];
+
+        SendPacketFromSrc(QUERY_NF, neighborIP, DEFAULT_TTL, curIP, sinknode, randomIndex);
+    }
 }
 
 /**
@@ -237,6 +266,45 @@ P2PApplication::InitialNormalizedFlood(uint32_t sinknode,
 void
 P2PApplication::NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeIndex, int howManyNodes)
 {
+    // seed for randomness
+    std::random_device rd; 
+    std::mt19937 gen(rd());
+
+    // Create vector of neighbour size, shuffle indices
+    std::vector<int> indices(m_neighbours.size());
+    std::iota(indices.begin(), indices.end(), 0);
+    std::shuffle(indices.begin(), indices.end(), gen);
+
+    int sentCount = 0;
+    for (int i = 0; i < indices.size() && sentCount < howManyNodes; ++i)
+    {
+        int randomIndex = indices[i];
+        // skip the ipv4 the request came from!
+        if (randomIndex == excludeIndex)
+        {
+            continue;
+        }
+
+        Ipv4Address curIPV4 = m_ipv4Addresses[randomIndex];
+        Ipv4Address curNeighbor = m_neighbours[randomIndex];
+
+        if (curNeighbor != p2pPacket.GetSenderIp())
+        {
+            // Create a copy of the packet before modifying
+            P2PPacket packetCopy = p2pPacket;
+            packetCopy.AddToPath(curIPV4);
+
+            Ptr<Packet> newPacket = Create<Packet>();
+            newPacket->AddHeader(packetCopy); // Attach the updated copy
+
+            NS_LOG_INFO("NF: forwarding packet from " << curIPV4 << " to " << curNeighbor);
+            packetCopy.PrintPath();
+            NS_LOG_INFO("----------\n");
+
+            m_sockets[i]->SendTo(newPacket, 0, InetSocketAddress(curNeighbor, m_port));
+            sentCount ++;
+        }
+    }
 }
 
 // ----------------------------------------------------------------------------
@@ -244,11 +312,31 @@ P2PApplication::NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeInde
 // ----------------------------------------------------------------------------
 
 /**
- * first random walk from src
+ * first random walk from src. k amount of walks to send 
  */
 void
-P2PApplication::InitialRandomWalk(uint32_t sinknode) // feel free to add anything here
+P2PApplication::InitialRandomWalk(uint32_t sinknode, int k)
 {
+    // seed for randomness
+    std::random_device rd; 
+    std::mt19937 gen(rd());
+
+    for (int i = 0; i < k; ++i)
+    {
+        if (m_neighbours.empty())
+        {
+            NS_LOG_WARN("No neighbours, cannot send walks");
+            return;
+        }
+
+        std::uniform_int_distribution<> dist(0, m_neighbours.size() - 1);
+        int randomIndex = dist(gen);
+
+        Ipv4Address curIP = m_ipv4Addresses[randomIndex];
+        Ipv4Address neighborIP = m_neighbours[randomIndex];
+
+        SendPacketFromSrc(QUERY_RW, neighborIP, DEFAULT_TTL, curIP, sinknode, randomIndex);
+    }
 }
 
 /**
@@ -260,6 +348,48 @@ P2PApplication::InitialRandomWalk(uint32_t sinknode) // feel free to add anythin
 void
 P2PApplication::RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex)
 {
+
+    if (m_neighbours.size() <= 1)
+    {
+        NS_LOG_INFO("No other neighbors to forward the random walk to.");
+        return;
+    }
+
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    std::vector<int> validIndices;
+    for (int i = 0; i < m_neighbours.size(); ++i)
+    {
+        if (i != excludeIndex)
+        {
+            validIndices.push_back(i);
+        }
+    }
+
+    if (validIndices.empty())
+    {
+        NS_LOG_INFO("No valid neighbor to send to (excluding sender).");
+        return;
+    }
+
+    std::uniform_int_distribution<> dist(0, validIndices.size() - 1);
+    int chosenIndex = validIndices[dist(gen)];
+
+    Ipv4Address curIP = m_ipv4Addresses[chosenIndex];
+    Ipv4Address nextHop = m_neighbours[chosenIndex];
+
+    p2pPacket.AddToPath(curIP);
+    p2pPacket.DecrementTtl();
+
+    Ptr<Packet> newPacket = Create<Packet>();
+    newPacket->AddHeader(p2pPacket);
+
+    NS_LOG_INFO("Random walk forwarding from " << curIP << " to " << nextHop);
+    p2pPacket.PrintPath();
+    NS_LOG_INFO("----------\n");
+
+    m_sockets[chosenIndex]->SendTo(newPacket, 0, InetSocketAddress(nextHop, m_port));
 }
 
 // ----------------------------------------------------------------------------
@@ -303,7 +433,7 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 
     // Check if the current node is the intended sink node or if it's a QUERY_HIT packet
 
-    bool isSinkNode = (p2pPacket.GetMessageType() == QUERY && p2pPacket.GetSinkNode() == curNodeId);
+    bool isSinkNode = ((p2pPacket.GetMessageType() == QUERY || p2pPacket.GetMessageType() == QUERY_RW || p2pPacket.GetMessageType() == QUERY_NF) && p2pPacket.GetSinkNode() == curNodeId);
 
     // If the packet is a query that reached the sink node or a query hit, handle it accordingly
     if (isSinkNode || p2pPacket.GetMessageType() == QUERY_HIT)
@@ -336,7 +466,23 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     p2pPacket.DecrementTtl();
 
     // Flood the packet to all neighbors except the one it was received from
-    FloodExceptSender(p2pPacket, senderIndex);
+    MessageType type = p2pPacket.GetMessageType();
+    switch (type) 
+    {
+        case QUERY:
+            // Flood the packet to all neighbors except the one it was received from
+            FloodExceptSender(p2pPacket, senderIndex);
+            break;
+        case QUERY_RW:
+            // Continue random walk except for the one it was recieved from 
+            RandomWalkExceptSender(p2pPacket, senderIndex);
+            break;
+        case QUERY_NF:
+            NormalizedFloodExceptSender(p2pPacket, senderIndex, DEFAULT_NODE_AMOUNT);
+            break;
+        default:
+            break;
+    }
 }
 
 // ----------------------------------------------------------------------------
