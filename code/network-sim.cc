@@ -1,7 +1,7 @@
-#include "subdir/p2p/p2p-application.h"
-#include "subdir/p2p/p2p-network-builder.h"
-#include "subdir/p2p/p2p-packet.h"
-#include "subdir/p2p/p2p-util.h"
+#include "subdir/code/p2p/p2p-application.h"
+#include "subdir/code/p2p/p2p-network-builder.h"
+#include "subdir/code/p2p/p2p-packet.h"
+#include "subdir/code/p2p/p2p-util.h"
 
 #include "ns3/animation-interface.h"
 #include "ns3/applications-module.h"
@@ -82,6 +82,7 @@ main(int argc, char* argv[])
 
     // Simulate query from node src to sink index
 
+
     // Simulator::Schedule(
     //     Seconds(8.0),
     //     MakeEvent(&P2PApplication::InitialFlood,
@@ -119,9 +120,10 @@ main(int argc, char* argv[])
         P2PUtil::PositionTreeNodes(0, 45.5, 10.0, 20, 15, anim, net.nodes);
     }
 
+    NS_LOG_INFO(Simulator::Now().GetSeconds() << " Simulation complete");
     Simulator::Run();
     Simulator::Destroy();
-    NS_LOG_INFO("Simulation complete");
+    // NS_LOG_INFO("Simulation complete");
 
     return 0;
 }

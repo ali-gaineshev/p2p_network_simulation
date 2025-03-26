@@ -48,6 +48,7 @@ CreateP2PNetwork(NetworkType networkType, uint32_t nodeNum, std::string fileName
     default:
         throw std::runtime_error("not implemented");
     }
+
 }
 
 P2PNetwork
@@ -297,7 +298,7 @@ CreateTreeNetwork(uint32_t numNodes)
     net.nodes = allNodes;
     net.nodeNeighbors = nodeNeighbors;
 
-    P2PUtil::PrintNetworkInfo(net);
+    // P2PUtil::PrintNetworkInfo(net);
     return net;
 }
 
