@@ -25,6 +25,7 @@ main(int argc, char* argv[])
     LogComponentEnable("P2PNetworkSim", LOG_LEVEL_INFO);
     LogComponentEnable("P2PPacket", LOG_LEVEL_INFO);
     LogComponentEnable("P2PApplication", LOG_LEVEL_INFO);
+    // LogComponentEnable("P2PApplication", LOG_LEVEL_DEBUG);
     LogComponentEnable("NetworkBuilder", LOG_LEVEL_INFO);
     LogComponentEnable("Util", LOG_LEVEL_INFO);
 
@@ -35,18 +36,24 @@ main(int argc, char* argv[])
     int srcIndex = 0;
     int sinkIndex = 4;
     int networkTypeInt = TREE;
+    std::string fileName = "";
 
     // Pass cl args. Add more if you feel like it
     CommandLine cmd;
     cmd.AddValue("nodeNum", "Number of nodes in the network", nodeNum);
     cmd.AddValue("srcIndex", "Source node index", srcIndex);
     cmd.AddValue("sinkIndex", "Sink node index", sinkIndex);
-    cmd.AddValue("networkType", "Network type (0: LINEAR, 1: TREE, 2: MESH)", networkTypeInt);
+    cmd.AddValue("networkType",
+                 "Network type (0: LINEAR, 1: TREE, 2: MESH, 3: D-REGULAR)",
+                 networkTypeInt);
+    cmd.AddValue("fileName",
+                 "Name of the file. May be empty. Use this for D-Regular and Clusters. For "
+                 "example: 'scratch/code/subdir/p2p/5_regular_with_10_nodes.txt'",
+                 fileName);
     cmd.Parse(argc, argv);
 
     // Convert int to enum
     NetworkType networkType = static_cast<NetworkType>(networkTypeInt);
-
 
     // Ensure valid indices
     if (srcIndex < 0 || srcIndex >= (int)nodeNum || sinkIndex < 0 || sinkIndex >= (int)nodeNum)
@@ -55,7 +62,7 @@ main(int argc, char* argv[])
         return 1;
     }
 
-    P2PNetwork net = CreateP2PNetwork(networkType, nodeNum);
+    P2PNetwork net = CreateP2PNetwork(networkType, nodeNum, fileName);
 
     // Install the P2PApplication for each node
     for (uint32_t i = 0; i < net.nodes.GetN(); ++i)
@@ -67,7 +74,7 @@ main(int argc, char* argv[])
         app->SetAddresses();
         app->SetPeers(net.nodeNeighbors[i]);
         // logger
-        Simulator::Schedule(Seconds(1.1), &P2PApplication::LogNodeInfo, app);
+        // Simulator::Schedule(Seconds(1.1), &P2PApplication::LogNodeInfo, app);
     }
 
     // DEBUGGING -> to show all underlying ipv4 protocol logs (helps to see if packet being dropped)
@@ -82,12 +89,13 @@ main(int argc, char* argv[])
     //               DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
     //               sinkIndex));
 
-    // simulate random walk query 
-    // Simulator::Schedule(
-    //         Seconds(8.0),
-    //         MakeEvent(&P2PApplication::InitialRandomWalk,
-    //                 DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
-    //                 sinkIndex, 10));
+    // simulate random walk query
+    Simulator::Schedule(
+        Seconds(8.0),
+        MakeEvent(&P2PApplication::InitialRandomWalk,
+                  DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+                  sinkIndex,
+                  2));
 
     // simulate a normalized floodign query
     // Simulator::Schedule(
@@ -95,7 +103,6 @@ main(int argc, char* argv[])
     //          MakeEvent(&P2PApplication::InitialNormalizedFlood,
     //                  DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
     //                  sinkIndex, 1));
-
 
     // Create XML animation file
 

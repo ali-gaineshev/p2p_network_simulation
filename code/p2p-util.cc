@@ -4,10 +4,60 @@
 #include "ns3/inet-socket-address.h"
 #include "ns3/log.h"
 
+#include <fstream>
+#include <iostream>
+#include <sstream>
+#include <unistd.h>
+#include <vector>
 NS_LOG_COMPONENT_DEFINE("Util");
 
 namespace ns3
 {
+
+std::vector<std::vector<int>>
+P2PUtil::readGraphFromFile(const std::string& filename)
+{
+    char cwd[1024];
+    if (getcwd(cwd, sizeof(cwd)) != NULL)
+        std::cout << "Current working dir: " << cwd << std::endl;
+
+    NS_LOG_INFO("FILENAME: " << filename);
+    std::ifstream file(filename);
+    if (!file)
+    {
+        NS_LOG_INFO("Couldn't read the file");
+        exit(1);
+    }
+
+    int numNodes;
+    file >> numNodes; // Read number of nodes
+
+    std::vector<std::vector<int>> adjList(numNodes); // Initialize adjacency list
+
+    int u, v;
+    while (file >> u >> v)
+    { // Read edges
+        adjList[u].push_back(v);
+        adjList[v].push_back(u);
+    }
+
+    file.close();
+    return adjList;
+}
+
+// void
+// P2PUtil::printGraph(const std::vector<std::vector<int>>& adjList)
+// {
+//     for (size_t i = 0; i < adjList.size(); i++)
+//     {
+//         std::cout << i << ": ";
+//         for (int neighbor : adjList[i])
+//         {
+//             std::cout << neighbor << " ";
+//         }
+//         std::cout << std::endl;
+//     }
+// }
 
 void
 P2PUtil::PositionLinearNodes(int curIndex,

@@ -8,6 +8,7 @@
 #define TREE_FIRST_OCTET_IPV4 "10."
 #define LINEAR_FIRST_OCTET_IPV4 "20."
 #define MESH_FIRST_OCTET_IPV4 "30."
+#define D_REGULAR_FIRST_OCTET_IPV4 "40."
 
 #define IPV4_LAST_OCTET ".0"
 #define NETWORK_MASK "255.255.255.0"
@@ -22,7 +23,7 @@ generateIpv4Base(uint32_t ipCounter, std::string ipv4FirstOctet)
 
     std::ostringstream baseIP; // ipv4
 
-    baseIP << ipv4FirstOctet << X << "." << Y << ".0";
+    baseIP << ipv4FirstOctet << X << "." << Y << IPV4_LAST_OCTET;
     return baseIP.str().c_str();
 }
 
@@ -31,7 +32,7 @@ generateIpv4Base(uint32_t ipCounter, std::string ipv4FirstOctet)
 // that means we can create structures seprately and then join them
 
 P2PNetwork
-CreateP2PNetwork(NetworkType networkType, uint32_t nodeNum)
+CreateP2PNetwork(NetworkType networkType, uint32_t nodeNum, std::string fileName)
 {
     switch (networkType)
     {
@@ -42,6 +43,8 @@ CreateP2PNetwork(NetworkType networkType, uint32_t nodeNum)
     case MESH:
         throw std::runtime_error("not implemented");
         // return CreateMeshNetwork(nodeNum, 5, 0.10);
+    case REGULAR:
+        return CreateRegularGraph(fileName);
     default:
         throw std::runtime_error("not implemented");
     }
@@ -49,12 +52,13 @@ CreateP2PNetwork(NetworkType networkType, uint32_t nodeNum)
 }
 
 P2PNetwork
-CreateMeshNetwork(uint32_t numNodes, int maxConnections, double probability)
+CreateRegularGraph(std::string fileName)
 {
     P2PNetwork net;
-
-    // Vector to store node neighbors
-    std::vector<std::vector<Ipv4Address>> nodeNeighbors(numNodes);
+    // reading file with data
+    std::vector<std::vector<int>> adjList = P2PUtil::readGraphFromFile(fileName);
+    int numNodes = adjList.size();
+    int numNeighbours = adjList[0].size();
 
     // Create nodes
     NodeContainer nodes;
@@ -70,13 +74,84 @@ CreateMeshNetwork(uint32_t numNodes, int maxConnections, double probability)
     p2p.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
     p2p.SetChannelAttribute("Delay", StringValue("2ms"));
 
-    // Random number generator
-    Ptr<UniformRandomVariable> randomVar = CreateObject<UniformRandomVariable>();
-    randomVar->SetAttribute("Min", DoubleValue(0.0));
-    randomVar->SetAttribute("Max", DoubleValue(1.0));
+    // IPv4 address helper
+    Ipv4AddressHelper address;
+    uint32_t ipCounter = 0;
 
-    double randValue = randomVar->GetValue();
-    NS_LOG_INFO(randValue);
+    // Vector to store node neighbors
+    std::vector<std::vector<Ipv4Address>> nodeNeighbors(numNodes);
+    std::vector<std::vector<int>> visitedNeighbours(numNodes);
+    // Create point-to-point links between  nodes
+    for (uint32_t i = 0; i < numNodes - 1; i++)
+    {
+        std::vector<int> visited = visitedNeighbours[i];
+        for (int neighbourIndex : adjList[i])
+        {
+            bool isVisited = false;
+            for (int visitedIndex : visited)
+            {
+                if (visitedIndex == neighbourIndex)
+                {
+                    isVisited = true;
+                    break;
+                }
+            }
+            if (isVisited)
+            {
+                continue;
+            }
+            NodeContainer nodePair;
+            nodePair.Add(nodes.Get(i));
+            nodePair.Add(nodes.Get(neighbourIndex));
+
+            // Install devices
+            NetDeviceContainer devices = p2p.Install(nodePair);
+
+            // Assign IPv4 addresses
+            Ipv4Address baseIP = generateIpv4Base(ipCounter, D_REGULAR_FIRST_OCTET_IPV4);
+            address.SetBase(baseIP, NETWORK_MASK);
+            Ipv4InterfaceContainer interfaces = address.Assign(devices);
+            if (interfaces.GetAddress(1) == Ipv4Address::GetZero())
+            {
+                NS_LOG_INFO("EMPTTTTT");
+            }
+            if (interfaces.GetAddress(0) == Ipv4Address::GetZero())
+            {
+                NS_LOG_INFO("EMPTTTTT");
+            }
+            // Store neighbor relationships
+            nodeNeighbors[i].push_back(interfaces.GetAddress(1));
+            nodeNeighbors[neighbourIndex].push_back(interfaces.GetAddress(0));
+
+            ipCounter++;
+
+            visitedNeighbours[i].push_back(neighbourIndex);
+            visitedNeighbours[neighbourIndex].push_back(i);
+        }
+    }
+
+    // Assign to P2PNetwork struct
+    net.nodes = nodes;
+    net.nodeNeighbors = nodeNeighbors;
+
+    P2PUtil::PrintNetworkInfo(net);
+    return net;
+}
+
+// 0: 2 7 4 3 9
+// 1: 6 3 5 8 4
+// 2: 0 5 8 7 9
+// 3: 0 1 4 6 8
+// 4: 0 1 3 9 5
+// 5: 1 2 4 6 9
+// 6: 1 3 5 8 7
+// 7: 0 2 6 9 8
+// 8: 1 2 3 6 7
+// 9: 0 2 4 5 7
+P2PNetwork
+CreateMeshNetwork(uint32_t numNodes, int maxConnections, double probability)
+{
+    P2PNetwork net;
 
     return net;
 }

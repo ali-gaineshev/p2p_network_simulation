@@ -14,7 +14,7 @@ enum NetworkType
     LINEAR,
     TREE,
     MESH,
-    COMBINED_LINEAR_TREE
+    REGULAR
 };
 
 struct P2PNetwork
@@ -23,10 +23,10 @@ struct P2PNetwork
     std::vector<std::vector<Ipv4Address>> nodeNeighbors;
 };
 
-P2PNetwork CreateP2PNetwork(NetworkType, uint32_t);
+P2PNetwork CreateP2PNetwork(NetworkType, uint32_t, std::string);
 
 P2PNetwork AddNewNodeToExistingNet(P2PNetwork&, int);
-
+P2PNetwork CreateRegularGraph(std::string fileName);
 P2PNetwork CreateLinearNetwork(uint32_t);
 P2PNetwork CreateTreeNetwork(uint32_t);
 P2PNetwork CreateMeshNetwork(uint32_t, int, double);
