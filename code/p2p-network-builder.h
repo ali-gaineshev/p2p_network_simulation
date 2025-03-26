@@ -23,10 +23,14 @@ struct P2PNetwork
     std::vector<std::vector<Ipv4Address>> nodeNeighbors;
 };
 
-P2PNetwork CreateP2PNetwork(NetworkType networkType,
-                            std::vector<uint32_t> numList,
-                            NodeContainer& treeNodes);
+P2PNetwork CreateP2PNetwork(NetworkType, uint32_t);
 
-P2PNetwork AddNewNodeToExistingNet(P2PNetwork& net, int nodeIndex);
+P2PNetwork AddNewNodeToExistingNet(P2PNetwork&, int);
+
+P2PNetwork CreateLinearNetwork(uint32_t);
+P2PNetwork CreateTreeNetwork(uint32_t);
+P2PNetwork CreateMeshNetwork(uint32_t, int, double);
+P2PNetwork CreateCombinedLinearTreeNetwork(uint32_t, uint32_t, NodeContainer&);
+Ipv4Address generateIpv4Base(int, std::string);
 
 #endif

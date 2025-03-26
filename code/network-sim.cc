@@ -21,10 +21,6 @@ NS_LOG_COMPONENT_DEFINE("P2PNetworkSim");
 int
 main(int argc, char* argv[])
 {
-    // pass cmd line args (number of nodes / data range)
-    CommandLine cmd;
-    cmd.Parse(argc, argv);
-
     // enable logging
     LogComponentEnable("P2PNetworkSim", LOG_LEVEL_INFO);
     LogComponentEnable("P2PPacket", LOG_LEVEL_INFO);
@@ -33,32 +29,33 @@ main(int argc, char* argv[])
     LogComponentEnable("Util", LOG_LEVEL_INFO);
 
     NS_LOG_INFO("Starting P2P simulation...");
-    // GLOBAL VARIABLES
 
-    /* COMBINED LINEAR AND TREE*/
-
-    // numList will usually take first value in the list when it creates a topology
-    // the idea is for combined structure, you will specify how many nodes in each topology
-    // there will be. For combined Linear_TREE topology, first value is linear and then tree
-    // std::vector<uint32_t> nodeNumList = {2, 10};
-    // int srcIndex = 0;
-    // int sinkIndex = 12; // sum up nodeNumList to find how many indecies work
-    // NetworkType networkType = COMBINED_LINEAR_TREE;
-
-    // NodeContainer treeNodes; // need a reference for a tree to plot it in netAnim. Still use
-    //                          // net.nodes for the whole toplogy
-    // P2PNetwork net = CreateP2PNetwork(networkType, nodeNumList, treeNodes);
-
-    /* JUST TREE*/
-    std::vector<uint32_t> nodeNumList = {250};
+    // DEFAULT VALUES
+    uint32_t nodeNum = 5;
     int srcIndex = 0;
-    int sinkIndex = 249;
-    NetworkType networkType = TREE;
-    NodeContainer treeNodes;
-    P2PNetwork net = CreateP2PNetwork(networkType, nodeNumList, treeNodes);
+    int sinkIndex = 4;
+    int networkTypeInt = TREE;
 
-    //  Enable global routing so different subnets can communicate
-    Ipv4GlobalRoutingHelper::PopulateRoutingTables();
+    // Pass cl args. Add more if you feel like it
+    CommandLine cmd;
+    cmd.AddValue("nodeNum", "Number of nodes in the network", nodeNum);
+    cmd.AddValue("srcIndex", "Source node index", srcIndex);
+    cmd.AddValue("sinkIndex", "Sink node index", sinkIndex);
+    cmd.AddValue("networkType", "Network type (0: LINEAR, 1: TREE, 2: MESH)", networkTypeInt);
+    cmd.Parse(argc, argv);
+
+    // Convert int to enum
+    NetworkType networkType = static_cast<NetworkType>(networkTypeInt);
+
+
+    // Ensure valid indices
+    if (srcIndex < 0 || srcIndex >= (int)nodeNum || sinkIndex < 0 || sinkIndex >= (int)nodeNum)
+    {
+        NS_LOG_ERROR("Invalid source or sink index.");
+        return 1;
+    }
+
+    P2PNetwork net = CreateP2PNetwork(networkType, nodeNum);
 
     // Install the P2PApplication for each node
     for (uint32_t i = 0; i < net.nodes.GetN(); ++i)
@@ -77,11 +74,28 @@ main(int argc, char* argv[])
     // LogComponentEnable("Ipv4L3Protocol", LOG_LEVEL_ALL);
 
     // Simulate query from node src to sink index
-    Simulator::Schedule(
-        Seconds(2.0),
-        MakeEvent(&P2PApplication::InitialFlood,
-                  DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
-                  sinkIndex));
+
+
+    // Simulator::Schedule(
+    //     Seconds(8.0),
+    //     MakeEvent(&P2PApplication::InitialFlood,
+    //               DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+    //               sinkIndex));
+
+    // simulate random walk query 
+    // Simulator::Schedule(
+    //         Seconds(8.0),
+    //         MakeEvent(&P2PApplication::InitialRandomWalk,
+    //                 DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+    //                 sinkIndex, 10));
+
+    // simulate a normalized floodign query
+    // Simulator::Schedule(
+    //          Seconds(8.0),
+    //          MakeEvent(&P2PApplication::InitialNormalizedFlood,
+    //                  DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+    //                  sinkIndex, 1));
+
 
     // Create XML animation file
 
@@ -93,11 +107,6 @@ main(int argc, char* argv[])
     anim.UpdateNodeColor(sinkIndex, 0, 0, 255);
 
     // assumption is that there is only 1 tree for now
-    if (networkType == COMBINED_LINEAR_TREE)
-    {
-        P2PUtil::PositionLinearNodes(0, 0, 5, 5, anim, net.nodes, nodeNumList[0]);
-        P2PUtil::PositionTreeNodes(0, 45.5, 10.0, 20, 15, anim, treeNodes);
-    }
 
     if (networkType == TREE)
     {
