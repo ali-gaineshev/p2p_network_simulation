@@ -107,6 +107,17 @@ P2PApplication::StopApplication()
 }
 
 // ----------------------------------------------------------------------------
+//                                DISABLING NODE
+// --------------------------------------------------------------------------
+
+void P2PApplication::SetDisableNode(bool disable)
+{
+    NS_LOG_INFO("Disabling node...");
+    m_isDisabled = disable;
+}
+
+
+// ----------------------------------------------------------------------------
 //                                FORWARDING QUERY HIT
 // --------------------------------------------------------------------------
 
@@ -264,6 +275,8 @@ void P2PApplication::RetryFlood(uint32_t sinknode)
 void
 P2PApplication::InitialNormalizedFlood(uint32_t sinknode, int howManyNodes)
 {
+
+
     // Initalize a retry event
     NS_LOG_INFO("Setting up normalized flood retry event...");
     m_retryEvent = Simulator::Schedule(Seconds(0.001), &P2PApplication::RetryNormalizedFlood, this, sinknode, howManyNodes);
@@ -398,8 +411,11 @@ void P2PApplication::RetryNormalizedFlood(uint32_t sinknode, int howManyNodes) {
 void
 P2PApplication::InitialRandomWalk(uint32_t sinknode, int k)
 {
+    // get total nodes in the network
+    // NS_LOG_INFO("Total nodes in the network: " << NodeList::GetNNodes());
+
     // Initalize a retry event
-    NS_LOG_INFO("Setting up random walk retry event...");
+    // NS_LOG_INFO("Setting up random walk retry event...");
     m_retryEvent = Simulator::Schedule(Seconds(0.01), &P2PApplication::RetryRandomWalk, this, sinknode, k);
 
 
@@ -521,12 +537,24 @@ void P2PApplication::RetryRandomWalk(uint32_t sinknode, int k) {
 void
 P2PApplication::RecievePacket(Ptr<Socket> socket)
 {
+
+    uint32_t curNodeId = GetNode()->GetId();
+
+    if (m_isDisabled)
+    {
+        NS_LOG_DEBUG(Simulator::Now().GetSeconds() << " Node" << curNodeId << " is disabled. Dropping packet.");
+        return;
+    }
+    else {
+        NS_LOG_DEBUG(Simulator::Now().GetSeconds() << " Node" << curNodeId << " is enabled.");
+    }
+
     // Retrieve the incoming packet from the socket
     Ptr<Packet> packet = socket->Recv();
     P2PPacket p2pPacket;
     packet->RemoveHeader(p2pPacket); // Extract the custom P2P packet header
 
-    uint32_t curNodeId = GetNode()->GetId();
+
 
     // Check if the packet has returned to the original sender node
     for (Ipv4Address ipv4 : m_ipv4Addresses)
