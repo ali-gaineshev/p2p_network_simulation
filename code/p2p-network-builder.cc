@@ -58,7 +58,9 @@ AddNewNodeToExistingNet(P2PNetwork& net, int nodeIndex)
 
     // Create a point-to-point connection between new node and the specified existing node
     PointToPointHelper p2p;
-    p2p.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+    // p2p.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
+
+    p2p.SetDeviceAttribute("DataRate", StringValue("512Kbps"));
     p2p.SetChannelAttribute("Delay", StringValue("2ms"));
 
     NodeContainer nodePair;
@@ -286,6 +288,6 @@ CreateTreeNetwork(uint32_t numNodes)
     net.nodes = allNodes;
     net.nodeNeighbors = nodeNeighbors;
 
-    P2PUtil::PrintNetworkInfo(net);
+    // P2PUtil::PrintNetworkInfo(net);
     return net;
 }
