@@ -244,14 +244,12 @@ void P2PApplication::RetryFlood(uint32_t sinknode)
     NS_LOG_INFO(Simulator::Now().GetSeconds() << " Retrying flood with extended TTL...");
     NS_LOG_INFO("-----------------------------------");
 
-    uint8_t extendedTtl = DEFAULT_TTL + 5;
-
     for (int i = 0; i < m_ipv4Addresses.size(); ++i)
     {
         Ipv4Address curIPV4 = m_ipv4Addresses[i];
         Ipv4Address curNeighbor = m_neighbours[i];
 
-        SendPacketFromSrc(QUERY, curNeighbor, extendedTtl, curIPV4, sinknode, i);
+        SendPacketFromSrc(QUERY, curNeighbor, DEFAULT_TTL + 5, curIPV4, sinknode, i);
     }
     
 }
@@ -360,9 +358,6 @@ void P2PApplication::RetryNormalizedFlood(uint32_t sinknode, int howManyNodes) {
             NS_LOG_INFO(Simulator::Now().GetSeconds() << " Retry needed; response not received.");
         }
 
-    uint8_t extendedTTL = DEFAULT_TTL + 5;
-
-
     // Taken from P2PApplication::InitialNormalizedFlood(uint32_t sinknode, int howManyNodes)
     // This could be rewritten or the function refractored s.t this works properly
 
@@ -388,7 +383,7 @@ void P2PApplication::RetryNormalizedFlood(uint32_t sinknode, int howManyNodes) {
         Ipv4Address curIP = m_ipv4Addresses[randomIndex];
         Ipv4Address neighborIP = m_neighbours[randomIndex];
 
-        SendPacketFromSrc(QUERY_NF, neighborIP, DEFAULT_TTL, curIP, sinknode, randomIndex);
+        SendPacketFromSrc(QUERY_NF, neighborIP, DEFAULT_TTL + 5, curIP, sinknode, randomIndex);
     }
 
 }
@@ -403,6 +398,11 @@ void P2PApplication::RetryNormalizedFlood(uint32_t sinknode, int howManyNodes) {
 void
 P2PApplication::InitialRandomWalk(uint32_t sinknode, int k)
 {
+    // Initalize a retry event
+    NS_LOG_INFO("Setting up random walk retry event...");
+    m_retryEvent = Simulator::Schedule(Seconds(0.01), &P2PApplication::RetryRandomWalk, this, sinknode, k);
+
+
     // seed for randomness
     std::random_device rd;
     std::mt19937 gen(rd());
@@ -478,6 +478,36 @@ P2PApplication::RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex)
 }
 
 void P2PApplication::RetryRandomWalk(uint32_t sinknode, int k) {
+
+    if (m_queryHit) {
+        NS_LOG_INFO("Retry not needed; response already received.");
+        return;
+        }
+        else {
+            NS_LOG_INFO(Simulator::Now().GetSeconds() << " Retry needed; response not received.");
+        }
+
+
+    // seed for randomness
+    std::random_device rd;
+    std::mt19937 gen(rd());
+
+    for (int i = 0; i < k; ++i)
+    {
+        if (m_neighbours.empty())
+        {
+            NS_LOG_WARN("No neighbours, cannot send walks");
+            return;
+        }
+
+        std::uniform_int_distribution<> dist(0, m_neighbours.size() - 1);
+        int randomIndex = dist(gen);
+
+        Ipv4Address curIP = m_ipv4Addresses[randomIndex];
+        Ipv4Address neighborIP = m_neighbours[randomIndex];
+
+        SendPacketFromSrc(QUERY_RW, neighborIP, DEFAULT_TTL + 5, curIP, sinknode, randomIndex);
+    }
 
 }
 
