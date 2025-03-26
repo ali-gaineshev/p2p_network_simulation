@@ -28,6 +28,12 @@ class P2PApplication : public Application
     std::vector<Ipv4Address> m_neighbours;    //
     std::map<uint32_t, Ipv4Address> m_queryCache;
 
+    // bool m_nodeJoin = true;
+
+    bool m_queryHit = false;
+    EventId m_retryEvent;
+    void RetryFlood(uint32_t sinknode);
+
     uint32_t messageIdCount;
     uint32_t m_port;
     uint32_t GenerateMessageId();
