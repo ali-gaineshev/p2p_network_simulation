@@ -15,9 +15,9 @@
 #include "ns3/packet.h"
 #include "ns3/udp-socket.h"
 
+#include <random>
 #include <unordered_set>
 #include <vector>
-#include <random>
 
 // for adding routing for backwards forwarding on qh
 #include "ns3/ipv4-list-routing.h"
@@ -26,11 +26,11 @@
 #include "ns3/ipv4-static-routing.h"
 
 // global variables
-#define DEFAULT_TTL 5
+#define DEFAULT_TTL 80
 #define DEFALT_PORT 5000
 
 // for normalized flooding (will be under the min edge number)
-// update this to the initial flood amount sent 
+// update this to the initial flood amount sent
 #define DEFAULT_NODE_AMOUNT 1
 
 // logging/debugging purposes
@@ -130,8 +130,8 @@ P2PApplication::ForwardQueryHit(P2PPacket ppacket, int lastHopIndex)
     Ptr<Packet> newPacket = Create<Packet>();
     newPacket->AddHeader(ppacket);
     // forward the packet to the previous hop
-    NS_LOG_INFO("FQH from " << curIPV4 << " back to " << lastHopIPV4 << " type "
-                            << ppacket.GetMessageType() << " with ttl " << (int)ppacket.GetTtl());
+    NS_LOG_DEBUG("FQH from " << curIPV4 << " back to " << lastHopIPV4 << " type "
+                             << ppacket.GetMessageType() << " with ttl " << (int)ppacket.GetTtl());
     m_sockets[lastHopIndex]->SendTo(newPacket, 0, InetSocketAddress(lastHopIPV4, m_port));
 }
 
@@ -160,7 +160,7 @@ P2PApplication::SendPacketFromSrc(MessageType type,
 
     // Send packet over the socket (how ns3 sends stuff)
     m_sockets[neighbourIndex]->SendTo(packet, 0, InetSocketAddress(dest, m_port));
-    NS_LOG_INFO("Sent " << type << " packet to " << dest << " from " << curIP);
+    NS_LOG_DEBUG("Sent " << type << " packet to " << dest << " from " << curIP);
 }
 
 // ----------------------------------------------------------------------------
@@ -211,9 +211,9 @@ P2PApplication::FloodExceptSender(P2PPacket p2pPacket, int excludeIndex)
             Ptr<Packet> newPacket = Create<Packet>();
             newPacket->AddHeader(packetCopy); // Attach the updated copy
 
-            NS_LOG_INFO("rp: forwarding packet from " << curIPV4 << " to " << curNeighbor);
-            packetCopy.PrintPath();
-            NS_LOG_INFO("----------\n");
+            NS_LOG_DEBUG("rp: forwarding packet from " << curIPV4 << " to " << curNeighbor);
+            // packetCopy.PrintPath();
+            NS_LOG_DEBUG("----------\n");
 
             m_sockets[i]->SendTo(newPacket, 0, InetSocketAddress(curNeighbor, m_port));
         }
@@ -228,11 +228,10 @@ P2PApplication::FloodExceptSender(P2PPacket p2pPacket, int excludeIndex)
  * first normalized flooding from src
  */
 void
-P2PApplication::InitialNormalizedFlood(uint32_t sinknode,
-                                       int howManyNodes)
+P2PApplication::InitialNormalizedFlood(uint32_t sinknode, int howManyNodes)
 {
     // seed for randomness
-    std::random_device rd; 
+    std::random_device rd;
     std::mt19937 gen(rd());
 
     // Create vector of neighbour size, shuffle indices
@@ -247,7 +246,7 @@ P2PApplication::InitialNormalizedFlood(uint32_t sinknode,
             NS_LOG_WARN("No neighbours");
             return;
         }
-        
+
         // pick index from randomly shuffled vector (ensures different)
         int randomIndex = indices[i];
         Ipv4Address curIP = m_ipv4Addresses[randomIndex];
@@ -267,7 +266,7 @@ void
 P2PApplication::NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeIndex, int howManyNodes)
 {
     // seed for randomness
-    std::random_device rd; 
+    std::random_device rd;
     std::mt19937 gen(rd());
 
     // Create vector of neighbour size, shuffle indices
@@ -297,12 +296,12 @@ P2PApplication::NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeInde
             Ptr<Packet> newPacket = Create<Packet>();
             newPacket->AddHeader(packetCopy); // Attach the updated copy
 
-            NS_LOG_INFO("NF: forwarding packet from " << curIPV4 << " to " << curNeighbor);
-            packetCopy.PrintPath();
-            NS_LOG_INFO("----------\n");
+            NS_LOG_DEBUG("NF: forwarding packet from " << curIPV4 << " to " << curNeighbor);
+            // packetCopy.PrintPath();
+            NS_LOG_DEBUG("----------\n");
 
             m_sockets[i]->SendTo(newPacket, 0, InetSocketAddress(curNeighbor, m_port));
-            sentCount ++;
+            sentCount++;
         }
     }
 }
@@ -312,13 +311,13 @@ P2PApplication::NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeInde
 // ----------------------------------------------------------------------------
 
 /**
- * first random walk from src. k amount of walks to send 
+ * first random walk from src. k amount of walks to send
  */
 void
 P2PApplication::InitialRandomWalk(uint32_t sinknode, int k)
 {
     // seed for randomness
-    std::random_device rd; 
+    std::random_device rd;
     std::mt19937 gen(rd());
 
     for (int i = 0; i < k; ++i)
@@ -348,10 +347,9 @@ P2PApplication::InitialRandomWalk(uint32_t sinknode, int k)
 void
 P2PApplication::RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex)
 {
-
     if (m_neighbours.size() <= 1)
     {
-        NS_LOG_INFO("No other neighbors to forward the random walk to.");
+        NS_LOG_DEBUG("No other neighbors to forward the random walk to.");
         return;
     }
 
@@ -369,7 +367,7 @@ P2PApplication::RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex)
 
     if (validIndices.empty())
     {
-        NS_LOG_INFO("No valid neighbor to send to (excluding sender).");
+        NS_LOG_DEBUG("No valid neighbor to send to (excluding sender).");
         return;
     }
 
@@ -385,9 +383,9 @@ P2PApplication::RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex)
     Ptr<Packet> newPacket = Create<Packet>();
     newPacket->AddHeader(p2pPacket);
 
-    NS_LOG_INFO("Random walk forwarding from " << curIP << " to " << nextHop);
-    p2pPacket.PrintPath();
-    NS_LOG_INFO("----------\n");
+    NS_LOG_DEBUG("Random walk forwarding from " << curIP << " to " << nextHop);
+    // p2pPacket.PrintPath();
+    NS_LOG_DEBUG("----------\n");
 
     m_sockets[chosenIndex]->SendTo(newPacket, 0, InetSocketAddress(nextHop, m_port));
 }
@@ -428,12 +426,15 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 
     // Retrieve the IP address of the current node based on senderIndex
     Ipv4Address curIP = m_ipv4Addresses[senderIndex];
-    NS_LOG_INFO("\nrp: at " << curIP << " from " << senderIP << " of type "
-                            << p2pPacket.GetMessageType());
+    NS_LOG_DEBUG("\nrp: at " << curIP << " from " << senderIP << " of type "
+                             << p2pPacket.GetMessageType());
 
     // Check if the current node is the intended sink node or if it's a QUERY_HIT packet
 
-    bool isSinkNode = ((p2pPacket.GetMessageType() == QUERY || p2pPacket.GetMessageType() == QUERY_RW || p2pPacket.GetMessageType() == QUERY_NF) && p2pPacket.GetSinkNode() == curNodeId);
+    bool isSinkNode =
+        ((p2pPacket.GetMessageType() == QUERY || p2pPacket.GetMessageType() == QUERY_RW ||
+          p2pPacket.GetMessageType() == QUERY_NF) &&
+         p2pPacket.GetSinkNode() == curNodeId);
 
     // If the packet is a query that reached the sink node or a query hit, handle it accordingly
     if (isSinkNode || p2pPacket.GetMessageType() == QUERY_HIT)
@@ -449,16 +450,16 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     // If the only neighbor is the one that sent the packet, it must be dropped
     if (m_neighbours.size() == 1)
     {
-        NS_LOG_INFO("rp: at " << curIP << " from " << senderIP << " of type "
-                              << p2pPacket.GetMessageType()
-                              << " Dropping the packet since no new neighbours");
+        NS_LOG_DEBUG("rp: at " << curIP << " from " << senderIP << " of type "
+                               << p2pPacket.GetMessageType()
+                               << " Dropping the packet since no new neighbours");
         return;
     }
 
     // Drop the packet if its TTL (Time-To-Live) has already reached zero
     if (p2pPacket.GetTtl() == 0)
     {
-        NS_LOG_INFO("TTL 0, dropping packet at " << curIP);
+        NS_LOG_DEBUG("TTL 0, dropping packet at " << curIP);
         return;
     }
 
@@ -467,21 +468,21 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 
     // Flood the packet to all neighbors except the one it was received from
     MessageType type = p2pPacket.GetMessageType();
-    switch (type) 
+    switch (type)
     {
-        case QUERY:
-            // Flood the packet to all neighbors except the one it was received from
-            FloodExceptSender(p2pPacket, senderIndex);
-            break;
-        case QUERY_RW:
-            // Continue random walk except for the one it was recieved from 
-            RandomWalkExceptSender(p2pPacket, senderIndex);
-            break;
-        case QUERY_NF:
-            NormalizedFloodExceptSender(p2pPacket, senderIndex, DEFAULT_NODE_AMOUNT);
-            break;
-        default:
-            break;
+    case QUERY:
+        // Flood the packet to all neighbors except the one it was received from
+        FloodExceptSender(p2pPacket, senderIndex);
+        break;
+    case QUERY_RW:
+        // Continue random walk except for the one it was recieved from
+        RandomWalkExceptSender(p2pPacket, senderIndex);
+        break;
+    case QUERY_NF:
+        NormalizedFloodExceptSender(p2pPacket, senderIndex, DEFAULT_NODE_AMOUNT);
+        break;
+    default:
+        break;
     }
 }
 
