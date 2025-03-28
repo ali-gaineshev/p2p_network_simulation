@@ -28,7 +28,7 @@ class P2PApplication : public Application
     std::vector<Ipv4Address> m_neighbours;    //
     std::map<uint32_t, Ipv4Address> m_queryCache;
 
-    // bool m_nodeJoin = true;
+    bool m_isDisabled = false;
 
     bool m_queryHit = false;
     EventId m_retryEvent;
@@ -78,6 +78,8 @@ class P2PApplication : public Application
     // SETTERS
     void SetPeers(std::vector<Ipv4Address> neighbours);
     void SetAddresses();
+    void SetDisableNode(bool m_isDisabled);
+
     // GETTERS
     const std::vector<Ptr<Socket>>& GetSockets() const;
     const std::vector<Ipv4Address>& GetIpv4Addresses() const;

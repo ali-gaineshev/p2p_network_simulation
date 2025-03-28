@@ -107,6 +107,17 @@ P2PApplication::StopApplication()
 }
 
 // ----------------------------------------------------------------------------
+//                                DISABLING NODE
+// --------------------------------------------------------------------------
+
+void
+P2PApplication::SetDisableNode(bool disable)
+{
+    NS_LOG_INFO("Disabling node...");
+    m_isDisabled = disable;
+}
+
+// ----------------------------------------------------------------------------
 //                                FORWARDING QUERY HIT
 // --------------------------------------------------------------------------
 
@@ -162,7 +173,6 @@ P2PApplication::SendPacketFromSrc(MessageType type,
     // Send packet over the socket (how ns3 sends stuff)
     m_sockets[neighbourIndex]->SendTo(packet, 0, InetSocketAddress(dest, m_port));
     NS_LOG_DEBUG("Sent " << type << " packet to " << dest << " from " << curIP);
-
 }
 
 // ----------------------------------------------------------------------------
@@ -187,14 +197,16 @@ P2PApplication::InitialFlood(uint32_t sinknode)
     m_retryEvent = Simulator::Schedule(Seconds(0.002), &P2PApplication::RetryFlood, this, sinknode);
 }
 
-void P2PApplication::RetryFlood(uint32_t sinknode)
+void
+P2PApplication::RetryFlood(uint32_t sinknode)
 {
     if (m_queryHit)
     {
         NS_LOG_INFO("Retry not needed; response already received.");
         return;
     }
-    else {
+    else
+    {
         NS_LOG_INFO(Simulator::Now().GetSeconds() << " Retry needed; response not received.");
     }
 
@@ -242,11 +254,9 @@ P2PApplication::FloodExceptSender(P2PPacket p2pPacket, int excludeIndex)
             Ptr<Packet> newPacket = Create<Packet>();
             newPacket->AddHeader(packetCopy); // Attach the updated copy
 
-
             NS_LOG_DEBUG("rp: forwarding packet from " << curIPV4 << " to " << curNeighbor);
             // packetCopy.PrintPath();
             NS_LOG_DEBUG("----------\n");
-
 
             m_sockets[i]->SendTo(newPacket, 0, InetSocketAddress(curNeighbor, m_port));
         }
@@ -433,27 +443,39 @@ P2PApplication::RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex)
 void
 P2PApplication::RecievePacket(Ptr<Socket> socket)
 {
+    uint32_t curNodeId = GetNode()->GetId();
+
+    if (m_isDisabled)
+    {
+        NS_LOG_DEBUG(Simulator::Now().GetSeconds()
+                     << " Node" << curNodeId << " is disabled. Dropping packet.");
+        return;
+    }
+    else
+    {
+        NS_LOG_DEBUG(Simulator::Now().GetSeconds() << " Node" << curNodeId << " is enabled.");
+    }
+
     // Retrieve the incoming packet from the socket
     Ptr<Packet> packet = socket->Recv();
     P2PPacket p2pPacket;
     packet->RemoveHeader(p2pPacket); // Extract the custom P2P packet header
-
-    uint32_t curNodeId = GetNode()->GetId();
 
     // Check if the packet has returned to the original sender node
     for (Ipv4Address ipv4 : m_ipv4Addresses)
     {
         if (p2pPacket.GetSenderIp() == ipv4)
         {
-            if (p2pPacket.GetMessageType() == QUERY_HIT) 
+            if (p2pPacket.GetMessageType() == QUERY_HIT)
             {
-                NS_LOG_INFO(Simulator::Now().GetSeconds() << " QUERY HIT BACK AT THE SENDER NODE. IP IS "
-                                                            << ipv4 << " | NODE ID IS " << curNodeId);
+                NS_LOG_INFO(Simulator::Now().GetSeconds()
+                            << " QUERY HIT BACK AT THE SENDER NODE. IP IS " << ipv4
+                            << " | NODE ID IS " << curNodeId);
                 m_queryHit = true;
             }
 
-            NS_LOG_INFO(Simulator::Now().GetSeconds() << " BACK AT THE SENDER NODE. IP IS " << ipv4 << " | NODE ID IS "
-                                                            << curNodeId);
+            NS_LOG_INFO(Simulator::Now().GetSeconds() << " BACK AT THE SENDER NODE. IP IS " << ipv4
+                                                      << " | NODE ID IS " << curNodeId);
 
             return; // Stop processing since we don't need to forward it back to the sender
         }
@@ -469,7 +491,6 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     NS_LOG_DEBUG("\nrp: at " << curIP << " from " << senderIP << " of type "
                              << p2pPacket.GetMessageType());
 
-
     // Check if the current node is the intended sink node or if it's a QUERY_HIT packet
 
     bool isSinkNode =
@@ -480,10 +501,12 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     // If the packet is a query that reached the sink node or a query hit, handle it accordingly
     if (isSinkNode || p2pPacket.GetMessageType() == QUERY_HIT)
     {
-        if (isSinkNode) { // The packet has reached the intended destination for the first time
-            NS_LOG_INFO(Simulator::Now().GetSeconds() << " rp: query hit at " << curNodeId << " !!!!!!");
+        if (isSinkNode)
+        { // The packet has reached the intended destination for the first time
+            NS_LOG_INFO(Simulator::Now().GetSeconds()
+                        << " rp: query hit at " << curNodeId << " !!!!!!");
             m_queryHit = true; // Set the query hit flag to true
-            }
+        }
 
         ForwardQueryHit(p2pPacket, senderIndex); // Send a response back to the requester
         return;

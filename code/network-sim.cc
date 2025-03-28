@@ -1,7 +1,7 @@
-#include "subdir/code/p2p/p2p-application.h"
-#include "subdir/code/p2p/p2p-network-builder.h"
-#include "subdir/code/p2p/p2p-packet.h"
-#include "subdir/code/p2p/p2p-util.h"
+#include "subdir/p2p/p2p-application.h"
+#include "subdir/p2p/p2p-network-builder.h"
+#include "subdir/p2p/p2p-packet.h"
+#include "subdir/p2p/p2p-util.h"
 
 #include "ns3/animation-interface.h"
 #include "ns3/applications-module.h"
@@ -14,7 +14,10 @@
 
 #include <unordered_set>
 
-// define logging component -> P2PNetworkSim for debugging
+// ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --nodeNum=3 --srcIndex=0 --sinkIndex=2
+// --networkType=3 --fileName=scratch/code/subdir/p2p/5_regular_with_10_nodes.txt"
+// ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --nodeNum=3 --srcIndex=0 --sinkIndex=2
+// --networkType=1
 using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("P2PNetworkSim");
 
@@ -82,20 +85,19 @@ main(int argc, char* argv[])
 
     // Simulate query from node src to sink index
 
-
-    // Simulator::Schedule(
-    //     Seconds(8.0),
-    //     MakeEvent(&P2PApplication::InitialFlood,
-    //               DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
-    //               sinkIndex));
-
-    // simulate random walk query
     Simulator::Schedule(
         Seconds(8.0),
-        MakeEvent(&P2PApplication::InitialRandomWalk,
+        MakeEvent(&P2PApplication::InitialFlood,
                   DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
-                  sinkIndex,
-                  2));
+                  sinkIndex));
+
+    // simulate random walk query
+    // Simulator::Schedule(
+    //     Seconds(8.0),
+    //     MakeEvent(&P2PApplication::InitialRandomWalk,
+    //               DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
+    //               sinkIndex,
+    //               2));
 
     // simulate a normalized floodign query
     // Simulator::Schedule(
@@ -105,6 +107,9 @@ main(int argc, char* argv[])
     //                  sinkIndex, 1));
 
     // Create XML animation file
+    MobilityHelper mobility;
+    mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    mobility.InstallAll();
 
     AnimationInterface anim("p2p-network-routing.xml");
 
