@@ -113,7 +113,8 @@ Navigate to where you would like to install NS-3 to and then run.
 
 ### Clone the repository
 
-#### Running the code
+# Running the code TEMP PlEASE LOOK HERE
+replace the whole scratch folder content with this. Then
 
 To start:
 
@@ -131,7 +132,7 @@ To run tree topology:
 To run file:
 
 ```
-./ns3 build && ./ns3 run "scratch/network-sim.cc --nodeNum=3 --srcIndex=0 --sinkIndex=2 --networkType=3 --fileName=scratch/subdir/p2p/2_regular_with_10_nodes.txt"
+./ns3 build && ./ns3 run "scratch/network-sim.cc --nodeNum=3 --srcIndex=0 --sinkIndex=2 --networkType=3 --fileName=scratch/code/graphs/2_regular_with_10_nodes.txt"
 ```
 
 #### Running Network Anim
