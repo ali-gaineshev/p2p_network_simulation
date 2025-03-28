@@ -225,7 +225,6 @@ P2PApplication::SendPacketFromSrc(MessageType type,
     P2PPacket p2pPacket(type, msgid, curIP, dest, ttl, 0, sinkn, {});
     p2pPacket.AddToPath(curIP);
     packet->AddHeader(p2pPacket);
-
     // Send packet over the socket (how ns3 sends stuff)
     m_sockets[neighbourIndex]->SendTo(packet, 0, InetSocketAddress(dest, m_port));
     NS_LOG_DEBUG("Sent " << type << " packet to " << dest << " from " << curIP);
@@ -245,7 +244,6 @@ P2PApplication::InitialFlood(uint32_t sinknode, uint32_t ttl)
     {
         Ipv4Address curIPV4 = m_ipv4Addresses[i];
         Ipv4Address curNeighbor = m_neighbours[i];
-
         SendPacketFromSrc(QUERY, curNeighbor, ttl, curIPV4, sinknode, i);
     }
 }

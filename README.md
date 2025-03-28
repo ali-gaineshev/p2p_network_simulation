@@ -132,7 +132,7 @@ To run tree topology:
 To run file:
 
 ```
-./ns3 build && ./ns3 run "scratch/network-sim.cc --nodeNum=3 --srcIndex=0 --sinkIndex=2 --networkType=3 --fileName=scratch/code/graphs/2_regular_with_10_nodes.txt"
+ ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --nodeNum=10 --srcIndex=0 --sinkIndex=9 --networkType=3 --fileName=scratch/code/graphs/2_regular_with_10_nodes.txt"
 ```
 
 #### Running Network Anim

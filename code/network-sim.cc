@@ -15,10 +15,7 @@
 #include <unordered_set>
 
 #define DEFAULT_TTL 1
-// ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --nodeNum=3 --srcIndex=0 --sinkIndex=2
-// --networkType=3 --fileName=scratch/code/subdir/p2p/5_regular_with_10_nodes.txt"
-// ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --nodeNum=3 --srcIndex=0 --sinkIndex=2
-// --networkType=1
+
 using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("P2PNetworkSim");
 
@@ -29,7 +26,7 @@ main(int argc, char* argv[])
     LogComponentEnable("P2PNetworkSim", LOG_LEVEL_INFO);
     LogComponentEnable("P2PPacket", LOG_LEVEL_INFO);
     LogComponentEnable("P2PApplication", LOG_LEVEL_INFO);
-    // LogComponentEnable("P2PApplication", LOG_LEVEL_DEBUG);
+    LogComponentEnable("P2PApplication", LOG_LEVEL_DEBUG);
     LogComponentEnable("NetworkBuilder", LOG_LEVEL_INFO);
     LogComponentEnable("Util", LOG_LEVEL_INFO);
 
