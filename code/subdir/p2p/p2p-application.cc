@@ -26,7 +26,7 @@
 #include "ns3/ipv4-static-routing.h"
 
 // global variables
-#define DEFAULT_TTL 80
+#define MAX_RETRIES 5
 #define DEFALT_PORT 5000
 
 // for normalized flooding (will be under the min edge number)
@@ -106,6 +106,62 @@ P2PApplication::StopApplication()
     }
 }
 
+void
+P2PApplication::ScheduleSearchWithRetry(SearchAlgorithm searchAlgorithm,
+                                        uint32_t sinknode,
+                                        uint32_t ttl,
+                                        int walkers)
+{
+    m_currentRetry = 0;
+    m_queryHit = false;
+    m_currentSearchAlgorithm = searchAlgorithm;
+    m_currentSinknode = sinknode;
+    m_currentTtl = ttl;
+    m_currentWalkers = walkers;
+
+    // Start the first search
+    if (searchAlgorithm == FLOOD)
+        InitialFlood(sinknode, ttl);
+    else if (searchAlgorithm == RANDOM_WALK)
+        InitialRandomWalk(sinknode, ttl, walkers);
+    else if (searchAlgorithm == NORMALIZED_FLOOD)
+        InitialNormalizedFlood(sinknode, ttl, walkers);
+
+    // Schedule retry check (no args needed since we store state)
+    m_retryEvent = Simulator::Schedule(Seconds(2.0), &P2PApplication::CheckAndRetrySearch, this);
+}
+
+void
+P2PApplication::CheckAndRetrySearch()
+{
+    if (m_queryHit)
+    {
+        NS_LOG_INFO("Query hit successful !!!");
+        return;
+    }
+
+    m_currentRetry++;
+    if (m_currentRetry >= MAX_RETRIES)
+    {
+        NS_LOG_INFO("Max retries reached. No query hit detected.");
+        return;
+    }
+
+    m_currentTtl += 1;
+
+    NS_LOG_INFO("Retry #" << m_currentRetry << " with TTL=" << m_currentTtl);
+
+    if (m_currentSearchAlgorithm == FLOOD)
+        InitialFlood(m_currentSinknode, m_currentTtl);
+    else if (m_currentSearchAlgorithm == RANDOM_WALK)
+        InitialRandomWalk(m_currentSinknode, m_currentTtl, m_currentWalkers);
+    else if (m_currentSearchAlgorithm == NORMALIZED_FLOOD)
+        InitialNormalizedFlood(m_currentSinknode, m_currentTtl, m_currentWalkers);
+
+    // Schedule next retry
+    m_retryEvent = Simulator::Schedule(Seconds(2.0), &P2PApplication::CheckAndRetrySearch, this);
+}
+
 // ----------------------------------------------------------------------------
 //                                DISABLING NODE
 // --------------------------------------------------------------------------
@@ -183,45 +239,14 @@ P2PApplication::SendPacketFromSrc(MessageType type,
  * first flooding from src
  */
 void
-P2PApplication::InitialFlood(uint32_t sinknode)
+P2PApplication::InitialFlood(uint32_t sinknode, uint32_t ttl)
 {
-    for (int i = 0; i < m_ipv4Addresses.size(); ++i)
+    for (uint32_t i = 0; i < m_ipv4Addresses.size(); ++i)
     {
         Ipv4Address curIPV4 = m_ipv4Addresses[i];
         Ipv4Address curNeighbor = m_neighbours[i];
 
-        SendPacketFromSrc(QUERY, curNeighbor, DEFAULT_TTL, curIPV4, sinknode, i);
-    }
-
-    NS_LOG_INFO("Setting up flood rety event...");
-    m_retryEvent = Simulator::Schedule(Seconds(0.002), &P2PApplication::RetryFlood, this, sinknode);
-}
-
-void
-P2PApplication::RetryFlood(uint32_t sinknode)
-{
-    if (m_queryHit)
-    {
-        NS_LOG_INFO("Retry not needed; response already received.");
-        return;
-    }
-    else
-    {
-        NS_LOG_INFO(Simulator::Now().GetSeconds() << " Retry needed; response not received.");
-    }
-
-    NS_LOG_INFO("-----------------------------------");
-    NS_LOG_INFO(Simulator::Now().GetSeconds() << " Retrying flood with extended TTL...");
-    NS_LOG_INFO("-----------------------------------");
-
-    uint8_t extendedTtl = DEFAULT_TTL + 5;
-
-    for (int i = 0; i < m_ipv4Addresses.size(); ++i)
-    {
-        Ipv4Address curIPV4 = m_ipv4Addresses[i];
-        Ipv4Address curNeighbor = m_neighbours[i];
-
-        SendPacketFromSrc(QUERY, curNeighbor, extendedTtl, curIPV4, sinknode, i);
+        SendPacketFromSrc(QUERY, curNeighbor, ttl, curIPV4, sinknode, i);
     }
 }
 
@@ -234,7 +259,7 @@ P2PApplication::RetryFlood(uint32_t sinknode)
 void
 P2PApplication::FloodExceptSender(P2PPacket p2pPacket, int excludeIndex)
 {
-    for (int i = 0; i < m_ipv4Addresses.size(); ++i)
+    for (uint32_t i = 0; i < m_ipv4Addresses.size(); ++i)
     {
         // skip the ipv4 the request came from!
         if (i == excludeIndex)
@@ -271,7 +296,7 @@ P2PApplication::FloodExceptSender(P2PPacket p2pPacket, int excludeIndex)
  * first normalized flooding from src
  */
 void
-P2PApplication::InitialNormalizedFlood(uint32_t sinknode, int howManyNodes)
+P2PApplication::InitialNormalizedFlood(uint32_t sinknode, uint32_t ttl, int howManyNodes)
 {
     // seed for randomness
     std::random_device rd;
@@ -295,7 +320,7 @@ P2PApplication::InitialNormalizedFlood(uint32_t sinknode, int howManyNodes)
         Ipv4Address curIP = m_ipv4Addresses[randomIndex];
         Ipv4Address neighborIP = m_neighbours[randomIndex];
 
-        SendPacketFromSrc(QUERY_NF, neighborIP, DEFAULT_TTL, curIP, sinknode, randomIndex);
+        SendPacketFromSrc(QUERY_NF, neighborIP, ttl, curIP, sinknode, randomIndex);
     }
 }
 
@@ -357,7 +382,7 @@ P2PApplication::NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeInde
  * first random walk from src. k amount of walks to send
  */
 void
-P2PApplication::InitialRandomWalk(uint32_t sinknode, int k)
+P2PApplication::InitialRandomWalk(uint32_t sinknode, uint32_t ttl, int k)
 {
     // seed for randomness
     std::random_device rd;
@@ -377,7 +402,7 @@ P2PApplication::InitialRandomWalk(uint32_t sinknode, int k)
         Ipv4Address curIP = m_ipv4Addresses[randomIndex];
         Ipv4Address neighborIP = m_neighbours[randomIndex];
 
-        SendPacketFromSrc(QUERY_RW, neighborIP, DEFAULT_TTL, curIP, sinknode, randomIndex);
+        SendPacketFromSrc(QUERY_RW, neighborIP, ttl, curIP, sinknode, randomIndex);
     }
 }
 
@@ -400,7 +425,7 @@ P2PApplication::RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex)
     std::mt19937 gen(rd());
 
     std::vector<int> validIndices;
-    for (int i = 0; i < m_neighbours.size(); ++i)
+    for (uint32_t i = 0; i < m_neighbours.size(); ++i)
     {
         if (i != excludeIndex)
         {
@@ -447,13 +472,13 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 
     if (m_isDisabled)
     {
-        NS_LOG_DEBUG(Simulator::Now().GetSeconds()
-                     << " Node" << curNodeId << " is disabled. Dropping packet.");
+        // NS_LOG_DEBUG(Simulator::Now().GetSeconds()
+        //              << " Node" << curNodeId << " is disabled. Dropping packet.");
         return;
     }
     else
     {
-        NS_LOG_DEBUG(Simulator::Now().GetSeconds() << " Node" << curNodeId << " is enabled.");
+        // NS_LOG_DEBUG(Simulator::Now().GetSeconds() << " Node" << curNodeId << " is enabled.");
     }
 
     // Retrieve the incoming packet from the socket
@@ -468,14 +493,15 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
         {
             if (p2pPacket.GetMessageType() == QUERY_HIT)
             {
-                NS_LOG_INFO(Simulator::Now().GetSeconds()
-                            << " QUERY HIT BACK AT THE SENDER NODE. IP IS " << ipv4
-                            << " | NODE ID IS " << curNodeId);
+                // NS_LOG_INFO(Simulator::Now().GetSeconds()
+                //             << " QUERY HIT BACK AT THE SENDER NODE. IP IS " << ipv4
+                //             << " | NODE ID IS " << curNodeId);
                 m_queryHit = true;
             }
 
-            NS_LOG_INFO(Simulator::Now().GetSeconds() << " BACK AT THE SENDER NODE. IP IS " << ipv4
-                                                      << " | NODE ID IS " << curNodeId);
+            // NS_LOG_INFO(Simulator::Now().GetSeconds() << " BACK AT THE SENDER NODE. IP IS " <<
+            // ipv4
+            //                                           << " | NODE ID IS " << curNodeId);
 
             return; // Stop processing since we don't need to forward it back to the sender
         }
@@ -503,8 +529,8 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     {
         if (isSinkNode)
         { // The packet has reached the intended destination for the first time
-            NS_LOG_INFO(Simulator::Now().GetSeconds()
-                        << " rp: query hit at " << curNodeId << " !!!!!!");
+            // NS_LOG_INFO(Simulator::Now().GetSeconds()
+            //             << " rp: query hit at " << curNodeId << " !!!!!!");
             m_queryHit = true; // Set the query hit flag to true
         }
 
@@ -618,6 +644,12 @@ P2PApplication::SetAddresses()
 // ----------------------------------------------------------------------------
 //                                GETTERS
 // ----------------------------------------------------------------------------
+
+const bool
+P2PApplication::GetQueryHit() const
+{
+    return m_queryHit;
+}
 
 const std::vector<Ptr<Socket>>&
 P2PApplication::GetSockets() const

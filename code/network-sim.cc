@@ -14,6 +14,7 @@
 
 #include <unordered_set>
 
+#define DEFAULT_TTL 1
 // ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --nodeNum=3 --srcIndex=0 --sinkIndex=2
 // --networkType=3 --fileName=scratch/code/subdir/p2p/5_regular_with_10_nodes.txt"
 // ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --nodeNum=3 --srcIndex=0 --sinkIndex=2
@@ -31,8 +32,6 @@ main(int argc, char* argv[])
     // LogComponentEnable("P2PApplication", LOG_LEVEL_DEBUG);
     LogComponentEnable("NetworkBuilder", LOG_LEVEL_INFO);
     LogComponentEnable("Util", LOG_LEVEL_INFO);
-
-    NS_LOG_INFO("Starting P2P simulation...");
 
     // DEFAULT VALUES
     uint32_t nodeNum = 5;
@@ -85,11 +84,18 @@ main(int argc, char* argv[])
 
     // Simulate query from node src to sink index
 
-    Simulator::Schedule(
-        Seconds(8.0),
-        MakeEvent(&P2PApplication::InitialFlood,
-                  DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(srcIndex)),
-                  sinkIndex));
+    auto app = DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(0));
+    if (app)
+    {
+        NS_LOG_INFO("Starting P2P simulation...");
+        Simulator::Schedule(Seconds(2),
+                            &P2PApplication::ScheduleSearchWithRetry,
+                            app,
+                            FLOOD,
+                            sinkIndex,
+                            DEFAULT_TTL,
+                            0);
+    }
 
     // simulate random walk query
     // Simulator::Schedule(
@@ -125,10 +131,8 @@ main(int argc, char* argv[])
         P2PUtil::PositionTreeNodes(0, 45.5, 10.0, 20, 15, anim, net.nodes);
     }
 
-    NS_LOG_INFO(Simulator::Now().GetSeconds() << " Simulation complete");
     Simulator::Run();
     Simulator::Destroy();
-    // NS_LOG_INFO("Simulation complete");
 
     return 0;
 }

@@ -120,7 +120,7 @@ To start:
 
 ```
 ./ns3 clean
-./ns3 configure --disable-werror
+./ns3 configure --disable-werror --disable-warning
 ```
 
 To run tree topology:

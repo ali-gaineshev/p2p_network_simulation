@@ -15,24 +15,34 @@
 #include <map>
 #include <vector>
 
+enum SearchAlgorithm
+{
+    FLOOD,
+    RANDOM_WALK,
+    NORMALIZED_FLOOD
+};
+
 namespace ns3
+
 {
 // class declaration (inherits from ns3::Application)
 class P2PApplication : public Application
 {
   private:
-    // at index i
-    //
+    // application variables
     std::vector<Ptr<Socket>> m_sockets;
-    std::vector<Ipv4Address> m_ipv4Addresses; // its node's  a
-    std::vector<Ipv4Address> m_neighbours;    //
+    std::vector<Ipv4Address> m_ipv4Addresses;
+    std::vector<Ipv4Address> m_neighbours;
     std::map<uint32_t, Ipv4Address> m_queryCache;
-
+    // application functionality
+    uint32_t m_currentRetry = 0;
     bool m_isDisabled = false;
-
     bool m_queryHit = false;
     EventId m_retryEvent;
-    void RetryFlood(uint32_t sinknode);
+    SearchAlgorithm m_currentSearchAlgorithm;
+    uint32_t m_currentSinknode;
+    uint32_t m_currentTtl;
+    int m_currentWalkers;
 
     uint32_t messageIdCount;
     uint32_t m_port;
@@ -50,6 +60,14 @@ class P2PApplication : public Application
     virtual void StartApplication() override;
     virtual void StopApplication() override;
 
+    // Searching
+    void ScheduleSearchWithRetry(SearchAlgorithm searchAlgorithm,
+                                 uint32_t sinknode,
+                                 uint32_t ttl,
+                                 int walkers);
+
+    void CheckAndRetrySearch();
+
     // RECEIVING
     void RecievePacket(Ptr<Socket> socket);
 
@@ -61,13 +79,13 @@ class P2PApplication : public Application
                            uint32_t sinkn,
                            int neighbourIndex);
     // FLOODING
-    void InitialFlood(uint32_t sinknode);
+    void InitialFlood(uint32_t sinknode, uint32_t ttl);
     void FloodExceptSender(P2PPacket p2pPacket, int excludeIndex);
     // NORMALIZED FLOOD
-    void InitialNormalizedFlood(uint32_t sinknode, int howManyNodes);
+    void InitialNormalizedFlood(uint32_t sinknode, uint32_t ttl, int howManyNodes);
     void NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeIndex, int howManyNodes);
     // RANDOM WALKS
-    void InitialRandomWalk(uint32_t sinknode, int k);
+    void InitialRandomWalk(uint32_t sinknode, uint32_t ttl, int k);
     void RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex);
 
     // BACK TRACKING
@@ -81,6 +99,7 @@ class P2PApplication : public Application
     void SetDisableNode(bool m_isDisabled);
 
     // GETTERS
+    const bool GetQueryHit() const;
     const std::vector<Ptr<Socket>>& GetSockets() const;
     const std::vector<Ipv4Address>& GetIpv4Addresses() const;
     const std::vector<Ipv4Address>& GetNeighbours() const;
