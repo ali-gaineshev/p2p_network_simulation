@@ -32,6 +32,10 @@ def save_graph_as_image(G, img_filename):
     plt.close()
     print(f"Graph saved as {img_filename}")
 
+def save_graph_as_graphml(G, graphml_filename):
+    nx.write_graphml(G, graphml_filename)
+    print(f"GraphML file saved as {graphml_filename}")
+
 def regular_graph(args):
     d = int(args[0])
     n = int(args[1])
@@ -40,5 +44,6 @@ def regular_graph(args):
     edges = list(G.edges)
     write_graph_to_txt(f"{d}_regular_with_{n}_nodes.txt", n, edges)
     save_graph_as_image(G, f"{d}_regular_with_{n}_nodes.png")
+    save_graph_as_graphml(G, f"{d}_regular_with_{n}_nodes.graphml")
 
 main()
