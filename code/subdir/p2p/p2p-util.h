@@ -14,6 +14,8 @@ class P2PApplication; // Forward declaration
 class P2PUtil
 {
   public:
+    static void saveStatsAsCSV(NodeContainer nodes, std::string filename);
+
     static std::vector<std::vector<int>> readGraphFromFile(const std::string& filename);
     static void printGraph(const std::vector<std::vector<int>>& adjList);
     static void PositionLinearNodes(int curIndex,

@@ -39,7 +39,7 @@ def save_graph_as_graphml(G, graphml_filename):
 def regular_graph(args):
     d = int(args[0])
     n = int(args[1])
-    G = nx.random_regular_graph(d, n)
+    G = nx.random_regular_graph(d, n , seed=1)
 
     edges = list(G.edges)
     write_graph_to_txt(f"{d}_regular_with_{n}_nodes.txt", n, edges)

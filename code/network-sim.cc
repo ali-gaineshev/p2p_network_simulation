@@ -138,33 +138,11 @@ main(int argc, char* argv[])
     NS_LOG_INFO("\nSimulation Statistics:");
     NS_LOG_INFO("----------------------");
 
-    for (int i = 0; i < nodeNum; i++)
-    {
-        Ptr<P2PApplication> app = DynamicCast<P2PApplication>(net.nodes.Get(i)->GetApplication(0));
-        if (app)
-        {
-            NS_LOG_INFO("Node " << i << ":");
+    // stats. set nodes
+    DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(0))->SetSrcNode();
+    DynamicCast<P2PApplication>(net.nodes.Get(sinkIndex)->GetApplication(0))->SetSinkNode();
 
-            if (i == srcIndex || i == sinkIndex)
-            {
-                NS_LOG_INFO("  Query Hits: " << app->GetQueryHits());
-                auto hops = app->GetHopsForQueryHits();
-                for (int i = 1; i < hops.size() + 1; i++)
-                {
-                    NS_LOG_INFO("       Hops for Query Hit " << i << " is " << hops[i - 1]);
-                }
-            }
-
-            NS_LOG_INFO("  Received Requests: " << app->GetReceivedRequests());
-            NS_LOG_INFO("  Sent Requests: " << app->GetSentRequests());
-            NS_LOG_INFO("  Forwarded Query Hits: " << app->GetForwardedQueryHits());
-            if (i == srcIndex)
-            {
-                NS_LOG_INFO("  Tried Requests: " << app->GetTriedRequests());
-                NS_LOG_INFO("  Initialized Requests: " << app->GetInitializedRequests());
-            }
-        }
-    }
+    P2PUtil::saveStatsAsCSV(net.nodes, "p2p-network-stats.csv");
 
     Simulator::Destroy();
 

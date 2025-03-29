@@ -505,16 +505,28 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     uint32_t curNodeId = GetNode()->GetId();
 
     // TO DO
-    // disable node here------------
-
-    // stats
-    stats.IncrementReceivedRequests();
+    // if node is disabled don't do anything
+    if (m_isDisabled)
+    {
+        NS_LOG_INFO("Node is disabled. Ignoring incoming packet.");
+        return;
+    }
 
     // ----------------- logic -----------------
     // Retrieve the incoming packet from the socket
     Ptr<Packet> packet = socket->Recv();
     P2PPacket p2pPacket;
     packet->RemoveHeader(p2pPacket); // Extract the custom P2P packet header
+
+    // check if there is a loop
+    if (IsCurrentNodeInPath(p2pPacket.GetPath()))
+    {
+        NS_LOG_INFO("Loop detected. Killing the packet");
+        return;
+    }
+
+    // stats
+    stats.IncrementReceivedRequests();
 
     // Check if the packet has returned to the original sender node
     if (DoesIPv4BelongToCurrentNode(p2pPacket.GetSenderIp()))
@@ -565,11 +577,11 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     {
         if (isSinkNode)
         { // The packet has reached the intended destination for the first time
-            NS_LOG_INFO(Simulator::Now().GetSeconds()
-                        << " rp: query hit at " << curNodeId << " !!!!!!");
-            NS_LOG_INFO(Simulator::Now().GetSeconds()
-                        << " rp: path size is " << p2pPacket.getPathSize() << " | hops is "
-                        << static_cast<int>(p2pPacket.GetHops()) << "\n");
+            NS_LOG_DEBUG(Simulator::Now().GetSeconds()
+                         << " rp: query hit at " << curNodeId << " !!!!!!");
+            NS_LOG_DEBUG(Simulator::Now().GetSeconds()
+                         << " rp: path size is " << p2pPacket.getPathSize() << " | hops is "
+                         << static_cast<int>(p2pPacket.GetHops()) << "\n");
             m_queryHit = true; // Set the query hit flag to true
 
             // stats
@@ -629,6 +641,18 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 // ----------------------------------------------------------------------------
 //                                STATISTICS
 // --------------------------------------------------------------------------
+
+bool
+P2PApplication::IsSinkNode()
+{
+    return stats.GetIsSinkNode();
+}
+
+bool
+P2PApplication::IsSrcNode()
+{
+    return stats.GetIsSrcNode();
+}
 
 int
 P2PApplication::GetQueryHits()

@@ -14,6 +14,85 @@ NS_LOG_COMPONENT_DEFINE("Util");
 namespace ns3
 {
 
+void
+P2PUtil::saveStatsAsCSV(NodeContainer nodes, std::string filename)
+{
+    std::ofstream csvFile(filename);
+    if (!csvFile.is_open())
+    {
+        NS_LOG_ERROR("Failed to open CSV file: " << filename);
+        return;
+    }
+
+    // Write CSV header
+    csvFile << "NodeID,IsSink,IsSource,QueryHits,ReceivedRequests,"
+            << "SentRequests,ForwardedQueryHits,TriedRequests,"
+            << "InitializedRequests\n";
+
+    int nodeNum = nodes.GetN();
+    for (int i = 0; i < nodeNum; i++)
+    {
+        Ptr<P2PApplication> app = DynamicCast<P2PApplication>(nodes.Get(i)->GetApplication(0));
+        if (!app)
+            continue;
+
+        bool isSinkNode = app->IsSinkNode();
+        bool isSrcNode = app->IsSrcNode();
+
+        // Write basic node info
+        csvFile << i << "," << (isSinkNode ? "1" : "0") << "," << (isSrcNode ? "1" : "0") << ","
+                << app->GetQueryHits() << "," << app->GetReceivedRequests() << ","
+                << app->GetSentRequests() << "," << app->GetForwardedQueryHits() << ",";
+
+        // Source-specific stats
+        if (isSrcNode)
+        {
+            csvFile << app->GetTriedRequests() << "," << app->GetInitializedRequests();
+        }
+        else
+        {
+            csvFile << "0,0"; // Empty values for non-source nodes
+        }
+
+        csvFile << "\n";
+    }
+
+    csvFile.close();
+    NS_LOG_INFO("Saved statistics to: " << filename);
+
+    // printing
+    for (int i = 0; i < nodeNum; i++)
+    {
+        Ptr<P2PApplication> app = DynamicCast<P2PApplication>(nodes.Get(i)->GetApplication(0));
+        if (app)
+        {
+            NS_LOG_INFO("Node " << i << ":");
+
+            bool isSinkNode = app->IsSinkNode();
+            bool isSrcNode = app->IsSrcNode();
+
+            if (isSinkNode || isSrcNode)
+            {
+                NS_LOG_INFO("  Query Hits: " << app->GetQueryHits());
+                auto hops = app->GetHopsForQueryHits();
+                for (int i = 1; i < hops.size() + 1; i++)
+                {
+                    NS_LOG_INFO("       Hops for Query Hit " << i << " is " << hops[i - 1]);
+                }
+            }
+
+            NS_LOG_INFO("  Received Requests: " << app->GetReceivedRequests());
+            NS_LOG_INFO("  Sent Requests: " << app->GetSentRequests());
+            NS_LOG_INFO("  Forwarded Query Hits: " << app->GetForwardedQueryHits());
+            if (isSrcNode)
+            {
+                NS_LOG_INFO("  Tried Requests: " << app->GetTriedRequests());
+                NS_LOG_INFO("  Initialized Requests: " << app->GetInitializedRequests());
+            }
+        }
+    }
+}
+
 std::vector<std::vector<int>>
 P2PUtil::readGraphFromFile(const std::string& filename)
 {

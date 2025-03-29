@@ -65,6 +65,8 @@ class P2PApplication : public Application
     virtual void StopApplication() override;
 
     // statistics
+    bool IsSinkNode();
+    bool IsSrcNode();
     int GetQueryHits();
     std::vector<int> GetHopsForQueryHits();
     int GetSentRequests();
