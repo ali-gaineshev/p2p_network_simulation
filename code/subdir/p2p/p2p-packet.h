@@ -63,6 +63,9 @@ class P2PPacket : public Header
     uint32_t GenerateMessageId();
     bool IsPathEmpty() const;
 
+    void IncrementHops();
+    uint32_t getPathSize() const;
+
     // get
     MessageType GetMessageType() const;
     uint32_t GetMessageId() const;

@@ -68,7 +68,6 @@ P2PPacket::DecrementTtl()
     if (m_ttl > 0)
     {
         m_ttl--;
-        hops++;
     }
 }
 
@@ -181,6 +180,18 @@ P2PPacket::RemoveLastHop()
 {
     if (!path.empty())
         path.pop_back();
+}
+
+void
+P2PPacket::IncrementHops()
+{
+    hops++;
+}
+
+uint32_t
+P2PPacket::getPathSize() const
+{
+    return path.size();
 }
 
 bool

@@ -95,6 +95,7 @@ class P2PApplication : public Application
 
     // UTIL
     int GetNeighbourIndexFromNeighbourIP(Ipv4Address senderIP);
+    bool DoesIPv4BelongToCurrentNode(Ipv4Address IPv4toCheck);
     // SETTERS
     void SetPeers(std::vector<Ipv4Address> neighbours);
     void SetAddresses();
