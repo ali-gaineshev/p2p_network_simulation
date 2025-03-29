@@ -53,6 +53,8 @@ Create and simluate
 
 ## Technologies Used
 
+* Nice visualiztion website - https://graphonline.top/en/
+* Import graphml file into it
 ---
 
 # Features
