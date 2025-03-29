@@ -48,7 +48,6 @@ CreateP2PNetwork(NetworkType networkType, uint32_t nodeNum, std::string fileName
     default:
         throw std::runtime_error("not implemented");
     }
-
 }
 
 P2PNetwork
@@ -111,14 +110,7 @@ CreateRegularGraph(std::string fileName)
             Ipv4Address baseIP = generateIpv4Base(ipCounter, D_REGULAR_FIRST_OCTET_IPV4);
             address.SetBase(baseIP, NETWORK_MASK);
             Ipv4InterfaceContainer interfaces = address.Assign(devices);
-            if (interfaces.GetAddress(1) == Ipv4Address::GetZero())
-            {
-                NS_LOG_INFO("EMPTTTTT");
-            }
-            if (interfaces.GetAddress(0) == Ipv4Address::GetZero())
-            {
-                NS_LOG_INFO("EMPTTTTT");
-            }
+
             // Store neighbor relationships
             nodeNeighbors[i].push_back(interfaces.GetAddress(1));
             nodeNeighbors[neighbourIndex].push_back(interfaces.GetAddress(0));
@@ -134,20 +126,10 @@ CreateRegularGraph(std::string fileName)
     net.nodes = nodes;
     net.nodeNeighbors = nodeNeighbors;
 
-    P2PUtil::PrintNetworkInfo(net);
+    // P2PUtil::PrintNetworkInfo(net);
     return net;
 }
 
-// 0: 2 7 4 3 9
-// 1: 6 3 5 8 4
-// 2: 0 5 8 7 9
-// 3: 0 1 4 6 8
-// 4: 0 1 3 9 5
-// 5: 1 2 4 6 9
-// 6: 1 3 5 8 7
-// 7: 0 2 6 9 8
-// 8: 1 2 3 6 7
-// 9: 0 2 4 5 7
 P2PNetwork
 CreateMeshNetwork(uint32_t numNodes, int maxConnections, double probability)
 {

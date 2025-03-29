@@ -90,7 +90,7 @@ main(int argc, char* argv[])
     auto app = DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(0));
     if (app)
     {
-        NS_LOG_INFO("Starting P2P simulation...");
+        NS_LOG_INFO("\nStarting P2P simulation...\n");
         Simulator::Schedule(Seconds(5),
                             &P2PApplication::ScheduleSearchWithRetry,
                             app,
@@ -101,6 +101,8 @@ main(int argc, char* argv[])
     }
 
     // Create XML animation file
+
+    // this generates warnings but if it's not tree (file) then the animation is not correct
     MobilityHelper mobility;
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
     mobility.InstallAll();

@@ -488,46 +488,37 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 {
     uint32_t curNodeId = GetNode()->GetId();
 
-    if (m_isDisabled)
-    {
-        // NS_LOG_DEBUG(Simulator::Now().GetSeconds()
-        //              << " Node" << curNodeId << " is disabled. Dropping packet.");
-        return;
-    }
-    else
-    {
-        // NS_LOG_DEBUG(Simulator::Now().GetSeconds() << " Node" << curNodeId << " is enabled.");
-    }
-
     // Retrieve the incoming packet from the socket
     Ptr<Packet> packet = socket->Recv();
     P2PPacket p2pPacket;
     packet->RemoveHeader(p2pPacket); // Extract the custom P2P packet header
 
     // Check if the packet has returned to the original sender node
-    for (Ipv4Address ipv4 : m_ipv4Addresses)
+    if (DoesIPv4BelongToCurrentNode(p2pPacket.GetSenderIp()))
     {
-        if (p2pPacket.GetSenderIp() == ipv4)
+        if (p2pPacket.GetMessageType() == QUERY_HIT)
         {
-            if (p2pPacket.GetMessageType() == QUERY_HIT)
-            {
-                // NS_LOG_INFO(Simulator::Now().GetSeconds()
-                //             << " QUERY HIT BACK AT THE SENDER NODE. IP IS " << ipv4
-                //             << " | NODE ID IS " << curNodeId);
-                m_queryHit = true;
-            }
-
-            // NS_LOG_INFO(Simulator::Now().GetSeconds() << " BACK AT THE SENDER NODE. IP IS " <<
-            // ipv4
-            //                                           << " | NODE ID IS " << curNodeId);
-
-            return; // Stop processing since we don't need to forward it back to the sender
+            NS_LOG_INFO(Simulator::Now().GetSeconds() << " QUERY HIT BACK AT THE SOURCE NODE.");
+            m_queryHit = true;
         }
+
+        return; // Stop processing since we don't need to forward it back to the sender
     }
 
     // Identify the sender node and determine from which neighbor the packet was received
     Ipv4Address senderIP = p2pPacket.GetLastHop();
-    int senderIndex = GetNeighbourIndexFromNeighbourIP(senderIP);
+    int senderIndex;
+    try
+    {
+        // so currently we need a try catch because we use GetLastHop()
+        // if path is empty then it will return 0.0.0.0 which doesn't make sense but it happens
+        senderIndex = GetNeighbourIndexFromNeighbourIP(senderIP);
+    }
+    catch (const std::runtime_error& e)
+    {
+        NS_LOG_ERROR("Error: " << e.what());
+        return; // Stop processing if sender index is not found
+    }
     // At this point, 'senderIndex' holds the index of the neighbor that sent the packet
 
     // Retrieve the IP address of the current node based on senderIndex
@@ -547,8 +538,11 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     {
         if (isSinkNode)
         { // The packet has reached the intended destination for the first time
-            // NS_LOG_INFO(Simulator::Now().GetSeconds()
-            //             << " rp: query hit at " << curNodeId << " !!!!!!");
+            NS_LOG_INFO(Simulator::Now().GetSeconds()
+                        << " rp: query hit at " << curNodeId << " !!!!!!");
+            NS_LOG_INFO(Simulator::Now().GetSeconds()
+                        << " rp: path size is " << p2pPacket.getPathSize() << " | hops is "
+                        << static_cast<int>(p2pPacket.GetHops()) << "\n");
             m_queryHit = true; // Set the query hit flag to true
         }
 
@@ -576,7 +570,7 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 
     // Reduce the TTL before forwarding the packet to prevent infinite loops
     p2pPacket.DecrementTtl();
-
+    p2pPacket.IncrementHops();
     // Flood the packet to all neighbors except the one it was received from
     MessageType type = p2pPacket.GetMessageType();
     switch (type)
@@ -600,6 +594,20 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 // ----------------------------------------------------------------------------
 //                                UTIL
 // ----------------------------------------------------------------------------
+
+bool
+P2PApplication::DoesIPv4BelongToCurrentNode(Ipv4Address IPv4toCheck)
+{
+    for (Ipv4Address localIPs : m_ipv4Addresses)
+    {
+        if (IPv4toCheck == localIPs)
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 /**
  * Retrieves the index of a neighbor given its sender's IP address.
