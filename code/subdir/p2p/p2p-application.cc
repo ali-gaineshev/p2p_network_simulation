@@ -5,6 +5,7 @@
 #include "p2p-application.h"
 
 #include "p2p-packet.h"
+#include "p2p-stats.h"
 #include "p2p-util.h"
 
 #include "ns3/header.h"
@@ -87,6 +88,9 @@ P2PApplication::StartApplication()
         }
     }
 
+    // Initialize the statistics object
+    stats = P2PStats();
+
     // debug
     // PrintSocketBindings();
 }
@@ -106,6 +110,10 @@ P2PApplication::StopApplication()
         }
     }
 }
+
+// ----------------------------------------------------------------------------
+//                                EVENT SCHEDULER
+// --------------------------------------------------------------------------
 
 /**
  * Schedules a search with retry logic.
@@ -155,6 +163,9 @@ P2PApplication::CheckAndRetrySearch()
     }
 
     m_currentRetry++;
+    // stats
+    stats.IncrementTriedRequests();
+
     if (m_currentRetry >= MAX_RETRIES)
     {
         NS_LOG_INFO("Max retries reached. No query hit detected.");
@@ -215,6 +226,8 @@ P2PApplication::ForwardQueryHit(P2PPacket ppacket, int lastHopIndex)
                              << ppacket.GetMessageType() << " with ttl " << (int)ppacket.GetTtl());
 
     m_sockets[lastHopIndex]->SendTo(newPacket, 0, InetSocketAddress(lastHopIPV4, m_port));
+    // stats
+    stats.IncrementForwardedQueryHits();
 }
 
 // ----------------------------------------------------------------------------
@@ -242,6 +255,9 @@ P2PApplication::SendPacketFromSrc(MessageType type,
     // Send packet over the socket (how ns3 sends stuff)
     m_sockets[neighbourIndex]->SendTo(packet, 0, InetSocketAddress(dest, m_port));
     NS_LOG_DEBUG("Sent " << type << " packet to " << dest << " from " << curIP);
+
+    // stats
+    stats.IncrementInitializedRequests();
 }
 
 // ----------------------------------------------------------------------------
@@ -488,6 +504,13 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 {
     uint32_t curNodeId = GetNode()->GetId();
 
+    // TO DO
+    // disable node here------------
+
+    // stats
+    stats.IncrementReceivedRequests();
+
+    // ----------------- logic -----------------
     // Retrieve the incoming packet from the socket
     Ptr<Packet> packet = socket->Recv();
     P2PPacket p2pPacket;
@@ -500,6 +523,10 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
         {
             NS_LOG_INFO(Simulator::Now().GetSeconds() << " QUERY HIT BACK AT THE SOURCE NODE.");
             m_queryHit = true;
+
+            // stats
+            stats.IncrementQueryHits();
+            stats.AddHopsForQueryHit(static_cast<int>(p2pPacket.GetHops()));
         }
 
         return; // Stop processing since we don't need to forward it back to the sender
@@ -544,6 +571,10 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
                         << " rp: path size is " << p2pPacket.getPathSize() << " | hops is "
                         << static_cast<int>(p2pPacket.GetHops()) << "\n");
             m_queryHit = true; // Set the query hit flag to true
+
+            // stats
+            stats.IncrementQueryHits();
+            stats.AddHopsForQueryHit(static_cast<int>(p2pPacket.GetHops()));
         }
 
         ForwardQueryHit(p2pPacket, senderIndex); // Send a response back to the requester
@@ -571,6 +602,10 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     // Reduce the TTL before forwarding the packet to prevent infinite loops
     p2pPacket.DecrementTtl();
     p2pPacket.IncrementHops();
+
+    // stats
+    stats.IncrementSentRequests();
+
     // Flood the packet to all neighbors except the one it was received from
     MessageType type = p2pPacket.GetMessageType();
     switch (type)
@@ -592,8 +627,82 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
 }
 
 // ----------------------------------------------------------------------------
+//                                STATISTICS
+// --------------------------------------------------------------------------
+
+int
+P2PApplication::GetQueryHits()
+{
+    return stats.GetQueryHits();
+}
+
+std::vector<int>
+P2PApplication::GetHopsForQueryHits()
+{
+    return stats.GetHopsForQueryHits();
+}
+
+int
+P2PApplication::GetTriedRequests()
+{
+    return stats.GetTriedRequests();
+}
+
+int
+P2PApplication::GetInitializedRequests()
+{
+    return stats.GetInitializedRequests();
+}
+
+int
+P2PApplication::GetSentRequests()
+{
+    return stats.GetSentRequests();
+}
+
+int
+P2PApplication::GetReceivedRequests()
+{
+    return stats.GetReceivedRequests();
+}
+
+int
+P2PApplication::GetForwardedQueryHits()
+{
+    return stats.GetForwardedQueryHits();
+}
+
+void
+P2PApplication::SetSinkNode()
+{
+    stats.SetIsSinkNode(true);
+}
+
+void
+P2PApplication::SetSrcNode()
+{
+    stats.SetIsSrcNode(true);
+}
+
+// ----------------------------------------------------------------------------
 //                                UTIL
 // ----------------------------------------------------------------------------
+
+// check if there is a loop
+// O(n^2)
+bool
+P2PApplication::IsCurrentNodeInPath(std::vector<ns3::Ipv4Address> path)
+{
+    for (Ipv4Address pathIP : path)
+    {
+        if (DoesIPv4BelongToCurrentNode(pathIP))
+        {
+            return true;
+        }
+    }
+
+    return false;
+}
 
 bool
 P2PApplication::DoesIPv4BelongToCurrentNode(Ipv4Address IPv4toCheck)

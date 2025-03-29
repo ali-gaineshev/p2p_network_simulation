@@ -14,8 +14,7 @@
 
 #include <unordered_set>
 
-#define DEFAULT_TTL 1
-
+#define DEFAULT_TTL 5
 using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("P2PNetworkSim");
 
@@ -36,7 +35,7 @@ main(int argc, char* argv[])
     int sinkIndex = -1;
     int networkTypeInt = -1;
     int searchAlgorithmInt = -1;
-    uint32_t walkers;
+    uint32_t walkers = -1;
     uint32_t ttl = DEFAULT_TTL;
     // Pass cl args.
     CommandLine cmd;
@@ -63,12 +62,20 @@ main(int argc, char* argv[])
         return 1;
     }
 
+    if ((searchAlgorithmInt == 1 || searchAlgorithmInt == 2) && walkers == -1)
+    {
+        NS_LOG_ERROR("Please provide a valid number of walkers.");
+        return 1;
+    }
+
     // Convert int to enum
     NetworkType networkType = static_cast<NetworkType>(networkTypeInt);
     SearchAlgorithm searchAlgorithm = static_cast<SearchAlgorithm>(searchAlgorithmInt);
 
     // Build the network
     P2PNetwork net = CreateP2PNetwork(networkType, nodeNum, fileName);
+    // reassign
+    nodeNum = net.nodes.GetN();
 
     // Install the P2PApplication for each node
     for (uint32_t i = 0; i < net.nodes.GetN(); ++i)
@@ -104,6 +111,11 @@ main(int argc, char* argv[])
 
     // this generates warnings but if it's not tree (file) then the animation is not correct
     MobilityHelper mobility;
+    mobility.SetPositionAllocator("ns3::RandomRectanglePositionAllocator",
+                                  "X",
+                                  StringValue("ns3::UniformRandomVariable[Min=0.0|Max=100.0]"),
+                                  "Y",
+                                  StringValue("ns3::UniformRandomVariable[Min=0.0|Max=100.0]"));
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
     mobility.InstallAll();
 
@@ -122,6 +134,38 @@ main(int argc, char* argv[])
     }
 
     Simulator::Run();
+
+    NS_LOG_INFO("\nSimulation Statistics:");
+    NS_LOG_INFO("----------------------");
+
+    for (int i = 0; i < nodeNum; i++)
+    {
+        Ptr<P2PApplication> app = DynamicCast<P2PApplication>(net.nodes.Get(i)->GetApplication(0));
+        if (app)
+        {
+            NS_LOG_INFO("Node " << i << ":");
+
+            if (i == srcIndex || i == sinkIndex)
+            {
+                NS_LOG_INFO("  Query Hits: " << app->GetQueryHits());
+                auto hops = app->GetHopsForQueryHits();
+                for (int i = 1; i < hops.size() + 1; i++)
+                {
+                    NS_LOG_INFO("       Hops for Query Hit " << i << " is " << hops[i - 1]);
+                }
+            }
+
+            NS_LOG_INFO("  Received Requests: " << app->GetReceivedRequests());
+            NS_LOG_INFO("  Sent Requests: " << app->GetSentRequests());
+            NS_LOG_INFO("  Forwarded Query Hits: " << app->GetForwardedQueryHits());
+            if (i == srcIndex)
+            {
+                NS_LOG_INFO("  Tried Requests: " << app->GetTriedRequests());
+                NS_LOG_INFO("  Initialized Requests: " << app->GetInitializedRequests());
+            }
+        }
+    }
+
     Simulator::Destroy();
 
     return 0;

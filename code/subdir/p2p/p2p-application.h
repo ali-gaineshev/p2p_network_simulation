@@ -5,6 +5,7 @@
 #define P2P_APPLICATION_H
 
 #include "p2p-packet.h"
+#include "p2p-stats.h"
 
 #include "ns3/address.h"
 #include "ns3/application.h"
@@ -40,6 +41,7 @@ class P2PApplication : public Application
 
     // statistics
     bool m_queryHit = false;
+    P2PStats stats;
 
     // retry events and variables needed
     EventId m_retryEvent;
@@ -61,6 +63,17 @@ class P2PApplication : public Application
     static TypeId GetTypeId();
     virtual void StartApplication() override;
     virtual void StopApplication() override;
+
+    // statistics
+    int GetQueryHits();
+    std::vector<int> GetHopsForQueryHits();
+    int GetSentRequests();
+    int GetReceivedRequests();
+    int GetForwardedQueryHits();
+    int GetTriedRequests();
+    int GetInitializedRequests();
+    void SetSinkNode();
+    void SetSrcNode();
 
     // Searching and Scheduling
     void ScheduleSearchWithRetry(SearchAlgorithm searchAlgorithm,
@@ -95,6 +108,7 @@ class P2PApplication : public Application
 
     // UTIL
     int GetNeighbourIndexFromNeighbourIP(Ipv4Address senderIP);
+    bool IsCurrentNodeInPath(std::vector<ns3::Ipv4Address> path);
     bool DoesIPv4BelongToCurrentNode(Ipv4Address IPv4toCheck);
     // SETTERS
     void SetPeers(std::vector<Ipv4Address> neighbours);

@@ -65,6 +65,7 @@ function(create_scratch source_files)
                  scratch_directory ${scratch_absolute_directory}
   )
   list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/code/network-sim.cc)
+  list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/code/subdir/p2p/p2p-stats.cc)
   list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/code/subdir/p2p/p2p-packet.cc)
   list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/code/subdir/p2p/p2p-application.cc)
   list(APPEND source_files ${CMAKE_CURRENT_SOURCE_DIR}/code/subdir/p2p/p2p-network-builder.cc)
