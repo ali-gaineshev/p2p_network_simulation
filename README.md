@@ -126,13 +126,57 @@ To start:
 To run tree topology:
 
 ```
-./ns3 build && ./ns3 run "scratch/network-sim.cc --nodeNum=10 --srcIndex=0 --sinkIndex=9 --networkType=1"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --nodeNum=10 --srcIndex=0 --sinkIndex=9"
 ```
 
 To run file:
 
 ```
- ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --nodeNum=10 --srcIndex=0 --sinkIndex=9 --networkType=3 --fileName=scratch/code/graphs/2_regular_with_10_nodes.txt"
+ ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --fileName=filepath  --srcIndex=0 --sinkIndex=9"
+```
+Then add network type:
+
+* 1 - TREE
+* 2 - LINEAR
+* 3 - READ_FILE
+
+
+```
+--networkType=X
+```
+
+After that add *Search Algorithm*:
+
+For Flood:
+```
+--searchAlg=0
+```
+
+For Random Walk:
+```
+--searchAlg=1 --walkers=k
+```
+
+For Normalized Flood:
+```
+--searchAlg=2 --walkers=k
+```
+
+To set up initial ttl:
+```
+--ttl=X
+```
+
+#### Example calls:
+
+* Flood with initial ttl 5 and tree topology
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=1 --nodeNum=10 --srcIndex=0 --sinkIndex=9  --ttl=5"
+```
+
+* running a file with random walk and 6 walkers
+```
+ ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/2_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --walkers=6"
 ```
 
 #### Running Network Anim
