@@ -27,6 +27,7 @@
 
 // global variables
 #define MAX_RETRIES 5
+#define QUERY_TIMEOUT 2
 #define DEFALT_PORT 5000
 
 // for normalized flooding (will be under the min edge number)
@@ -106,6 +107,17 @@ P2PApplication::StopApplication()
     }
 }
 
+/**
+ * Schedules a search with retry logic.
+ * This function initializes the search parameters and starts the search process.
+ *
+ * @param searchAlgorithm The algorithm to use for the search (FLOOD, RANDOM_WALK,
+ * NORMALIZED_FLOOD).
+ * @param sinknode The node ID of the sink node to search for.
+ * @param ttl The time-to-live value for the search packets.
+ * @param walkers The number of random walkers to use (only applicable for RANDOM_WALK and
+ * NORMALIZED_FLOOD).
+ */
 void
 P2PApplication::ScheduleSearchWithRetry(SearchAlgorithm searchAlgorithm,
                                         uint32_t sinknode,
@@ -127,8 +139,9 @@ P2PApplication::ScheduleSearchWithRetry(SearchAlgorithm searchAlgorithm,
     else if (searchAlgorithm == NORMALIZED_FLOOD)
         InitialNormalizedFlood(sinknode, ttl, walkers);
 
-    // Schedule retry check (no args needed since we store state)
-    m_retryEvent = Simulator::Schedule(Seconds(2.0), &P2PApplication::CheckAndRetrySearch, this);
+    // Schedule retry check in 2 seconds
+    m_retryEvent =
+        Simulator::Schedule(Seconds(QUERY_TIMEOUT), &P2PApplication::CheckAndRetrySearch, this);
 }
 
 void
@@ -136,7 +149,8 @@ P2PApplication::CheckAndRetrySearch()
 {
     if (m_queryHit)
     {
-        NS_LOG_INFO("Query hit successful !!!");
+        NS_LOG_INFO("Query hit successful !!! No Retry Needed");
+        Simulator::Cancel(m_retryEvent);
         return;
     }
 
@@ -147,7 +161,8 @@ P2PApplication::CheckAndRetrySearch()
         return;
     }
 
-    m_currentTtl += 1;
+    m_currentTtl += 5; // Increase TTL for the next retry. Set to 5 right now, but can be changed
+                       // to be more dynamic
 
     NS_LOG_INFO("Retry #" << m_currentRetry << " with TTL=" << m_currentTtl);
 
@@ -158,14 +173,16 @@ P2PApplication::CheckAndRetrySearch()
     else if (m_currentSearchAlgorithm == NORMALIZED_FLOOD)
         InitialNormalizedFlood(m_currentSinknode, m_currentTtl, m_currentWalkers);
 
-    // Schedule next retry
-    m_retryEvent = Simulator::Schedule(Seconds(2.0), &P2PApplication::CheckAndRetrySearch, this);
+    // Schedule next retry - in 2 seconds
+    m_retryEvent =
+        Simulator::Schedule(Seconds(QUERY_TIMEOUT), &P2PApplication::CheckAndRetrySearch, this);
 }
 
 // ----------------------------------------------------------------------------
 //                                DISABLING NODE
 // --------------------------------------------------------------------------
 
+// todo
 void
 P2PApplication::SetDisableNode(bool disable)
 {
@@ -190,9 +207,6 @@ P2PApplication::ForwardQueryHit(P2PPacket ppacket, int lastHopIndex)
     ppacket.SetMessageType(QUERY_HIT);
     ppacket.SetDestIp(lastHopIPV4);
     ppacket.RemoveLastHop();
-    // so right now each time it forward this it will increase the ttl, not sure if this is a good
-    // idea right now
-    ppacket.SetTtl(ppacket.GetTtl() + 2);
 
     Ptr<Packet> newPacket = Create<Packet>();
     newPacket->AddHeader(ppacket);
@@ -222,7 +236,7 @@ P2PApplication::SendPacketFromSrc(MessageType type,
     Ptr<Packet> packet = Create<Packet>();
     uint32_t msgid = 0;
     // start hop at 0, and path at empty
-    P2PPacket p2pPacket(type, msgid, curIP, dest, ttl, 0, sinkn, {});
+    P2PPacket p2pPacket(type, msgid, curIP, dest, ttl - 1, 0, sinkn, {});
     p2pPacket.AddToPath(curIP);
     packet->AddHeader(p2pPacket);
     // Send packet over the socket (how ns3 sends stuff)
@@ -331,6 +345,12 @@ P2PApplication::InitialNormalizedFlood(uint32_t sinknode, uint32_t ttl, int howM
 void
 P2PApplication::NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeIndex, int howManyNodes)
 {
+    // cap howManyNodes to the number of neighbours
+    if (howManyNodes > m_neighbours.size())
+    {
+        howManyNodes = m_neighbours.size() - 1;
+    }
+
     // seed for randomness
     std::random_device rd;
     std::mt19937 gen(rd());

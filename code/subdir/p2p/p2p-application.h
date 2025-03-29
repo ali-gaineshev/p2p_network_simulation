@@ -34,11 +34,16 @@ class P2PApplication : public Application
     std::vector<Ipv4Address> m_ipv4Addresses;
     std::vector<Ipv4Address> m_neighbours;
     std::map<uint32_t, Ipv4Address> m_queryCache;
+
     // application functionality
-    uint32_t m_currentRetry = 0;
     bool m_isDisabled = false;
+
+    // statistics
     bool m_queryHit = false;
+
+    // retry events and variables needed
     EventId m_retryEvent;
+    uint32_t m_currentRetry = 0;
     SearchAlgorithm m_currentSearchAlgorithm;
     uint32_t m_currentSinknode;
     uint32_t m_currentTtl;
@@ -46,9 +51,6 @@ class P2PApplication : public Application
 
     uint32_t messageIdCount;
     uint32_t m_port;
-    uint32_t GenerateMessageId();
-    void SendQueryResponse(uint32_t queryId, Ipv4Address requester);
-    void ProcessQuery(std::string query, Ipv4Address sender);
 
   public:
     // public to construct/destruct
@@ -60,7 +62,7 @@ class P2PApplication : public Application
     virtual void StartApplication() override;
     virtual void StopApplication() override;
 
-    // Searching
+    // Searching and Scheduling
     void ScheduleSearchWithRetry(SearchAlgorithm searchAlgorithm,
                                  uint32_t sinknode,
                                  uint32_t ttl,
