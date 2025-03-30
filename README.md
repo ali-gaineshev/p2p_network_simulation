@@ -28,6 +28,11 @@ Spring 2025
 ---
 
 ## Course Information
+This project was created for CSC466: Advanced Topics in Computer Networks at the University of Victoria.
+
+The course focuses on Layer 3 and above, and the control plane of the Internet, particularly with overlay and peer-to-peer networking.
+
+The following project investigates P2P query routing techniques such as flooding, normalized flooding, and random walks using custom-built topologies and simulation tools.
 
 ---
 
@@ -43,7 +48,7 @@ Spring 2025
 
 ## Objective
 
-Create and simluate
+Create and simluate a decentralized unstructured peer-to-peer network, gathering statistics on different search methods
 
 ---
 
@@ -60,7 +65,9 @@ Create and simluate
 # Features
 
 - Different topologies
-
+- Flooding, normalized flooding, k-random walks
+- Packet forwarding and recieving
+- Animation functionality
 
 ---
 
@@ -196,17 +203,27 @@ After NetAnim opens:
 ```
 % python ./graph_generator.py regular x y
 ```
+Regular graph with 3 edges and 10 nodes:
+
+<img src="code/graphs/3_regular_with_10_nodes.png" alt="3-regular graph" width="300"/>
 
 * Creating a cluster graph with x groups of y nodes
 ```
 % python ./graph_generator.py cluster x y
 ```
 
+Cluster graph with 6 clusters of 7 nodes:
+
+<img src="code/graphs/cluster_6_with_7_nodes_each.png" alt="3-regular graph" width="300"/>
+
 * Creating a mega-graph connected with subcluster one containing x groups of y nodes so on ...
 ```
 % python ./graph_generator.py megagraph x y a b ... d e
 ```
 
+Mega-graph with 3 seperate clusters, all containing 4 groups with 4 nodes:
+
+<img src="code/graphs/megagraph.png" alt="3-regular graph" width="300"/>
 ## Usage
 
 ---
