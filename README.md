@@ -35,9 +35,9 @@ Spring 2025
 
 | Name            | Student ID | Email                |
 | --------------- | ---------- | -------------------- |
-| Holly Gummerson | 12345678   | hgummerson@uvic.ca   |
-| Ali Gaineshev   | 87654321   | ggaineshev@gmail.com |
-| Mathew Terhune  | 56781234   | mterhune@uvic.ca     |
+| Holly Gummerson | V00986098   | hgummerson@uvic.ca   |
+| Ali Gaineshev   | V00097349   | ggaineshev@gmail.com |
+| Mathew Terhune  | V00943466   | mterhune@uvic.ca     |
 
 ---
 
@@ -59,10 +59,8 @@ Create and simluate
 
 # Features
 
-✅ Feature: Different topologies
-✅ Feature
-✅ Feature
-✅ Feature
+- Different topologies
+
 
 ---
 
@@ -183,7 +181,31 @@ To set up initial ttl:
 
 #### Running Network Anim
 
----
+```
+./netanim-3.109/NetAnim
+```
+After NetAnim opens:
+
+1. Select 'Open XML trace file'
+2. Open "p2p-network-routing.xml" from the ns3 folder
+3. Press 'Play animation'
+
+#### Running Graph Generator
+
+* Creating a regular graph connected with x edges and y nodes 
+```
+% python ./graph_generator.py regular x y
+```
+
+* Creating a cluster graph with x groups of y nodes
+```
+% python ./graph_generator.py cluster x y
+```
+
+* Creating a mega-graph connected with subcluster one containing x groups of y nodes so on ...
+```
+% python ./graph_generator.py megagraph x y a b ... d e
+```
 
 ## Usage
 
