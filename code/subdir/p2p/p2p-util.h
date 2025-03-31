@@ -32,6 +32,13 @@ class P2PUtil
                                   double yOffset,
                                   AnimationInterface& anim,
                                   NodeContainer& nodes);
+    static void PositionClusterNodes(uint32_t nodeIndex,
+                                  double centerX,
+                                  double centerY,
+                                  double repRadius,
+                                  double memberRadius,
+                                  AnimationInterface& anim,
+                                  NodeContainer& nodes);
     static void PrintNodeInfo(Ptr<P2PApplication> app);
     static void PrintSocketBindings(Ptr<P2PApplication> app);
     static void PrintAddresses(Ptr<P2PApplication> app);

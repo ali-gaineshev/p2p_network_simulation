@@ -13,6 +13,9 @@
 #include "ns3/point-to-point-module.h"
 
 #include <unordered_set>
+#include <regex>
+#include <string>
+
 
 #define DEFAULT_TTL 5
 using namespace ns3;
@@ -126,11 +129,16 @@ main(int argc, char* argv[])
     anim.UpdateNodeDescription(sinkIndex, "Sink");
     anim.UpdateNodeColor(sinkIndex, 0, 0, 255);
 
-    // assumption is that there is only 1 tree for now
+    // determine graph type for NetAnim positioning 
+    std::regex clusterPattern(".*cluster.*", std::regex_constants::icase);
+    std::regex megaGraphPattern(".*megagraph.*", std::regex_constants::icase);
 
     if (networkType == TREE)
     {
         P2PUtil::PositionTreeNodes(0, 45.5, 10.0, 20, 15, anim, net.nodes);
+    }
+    if (std::regex_match(fileName, clusterPattern) || std::regex_match(fileName, megaGraphPattern)) {
+        P2PUtil::PositionClusterNodes(0, 50.0, 50.0, 30.0, 10.0, anim, net.nodes);
     }
 
     Simulator::Run();

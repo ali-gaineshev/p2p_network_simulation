@@ -9,6 +9,9 @@
 #include <sstream>
 #include <unistd.h>
 #include <vector>
+#include <cmath>
+#include <Kernel/math.h>
+
 NS_LOG_COMPONENT_DEFINE("Util");
 
 namespace ns3
@@ -180,6 +183,56 @@ P2PUtil::PositionTreeNodes(uint32_t nodeIndex,
 
     if (rightChild < numNodes)
         PositionTreeNodes(rightChild, x + xOffset, y + yOffset, xOffset / 2, yOffset, anim, nodes);
+}
+
+// Positions Nodes in NetAnim --------------------------------------- network-sim.cc
+void
+P2PUtil::PositionClusterNodes(uint32_t nodeIndex,
+                               double centerX,
+                               double centerY,
+                               double repRadius,
+                               double memberRadius,
+                               AnimationInterface& anim,
+                               NodeContainer& nodes)
+{
+    uint32_t totalNodes = nodes.GetN();
+    if (totalNodes == 0)
+        return;
+
+    anim.SetConstantPosition(nodes.Get(0), centerX, centerY);
+    uint32_t currentNode = 1;
+    uint32_t numClusters = 0;
+
+    // Estimate number of clusters (nodes directly connected to 0)
+    for (uint32_t i = 1; i < totalNodes; ++i) {
+        if (nodes.Get(i)->GetObject<Ipv4>()->GetNInterfaces() > 2) {
+            numClusters++;
+        }
+    }
+
+    double angleIncrement = 2 * M_PI / numClusters;
+    uint32_t clusterIndex = 0;
+
+    while (currentNode < totalNodes) {
+        double angle = clusterIndex * angleIncrement;
+        double repX = centerX + repRadius * cos(angle);
+        double repY = centerY + repRadius * sin(angle);
+
+        // Place representative
+        anim.SetConstantPosition(nodes.Get(currentNode), repX, repY);
+        ++currentNode;
+
+        // Now place its cluster members in a small circle around it
+        uint32_t membersInCluster = 0;
+        uint32_t estMembers = nodes.Get(currentNode - 1)->GetObject<Ipv4>()->GetNInterfaces() - 1;
+        for (uint32_t j = 0; j < estMembers && currentNode < totalNodes; ++j, ++currentNode) {
+            double memberAngle = 2 * M_PI * j / estMembers;
+            double memberX = repX + memberRadius * cos(memberAngle);
+            double memberY = repY + memberRadius * sin(memberAngle);
+            anim.SetConstantPosition(nodes.Get(currentNode), memberX, memberY);
+            ++clusterIndex;
+        }
+    }
 }
 
 // Prints Node Information --------------------------------------- p2p-application.cc
