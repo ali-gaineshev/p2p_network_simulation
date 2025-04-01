@@ -1,0 +1,129 @@
+5 times 
+
+
+3_regular_10_nodes
+
+ttl increases by 1
+
+Flood: 
+ttl - 1 
+
+Random Walk:
+ttl - 1
+walkers - 2
+
+Normalized Flood: 
+ttl - 1
+max nodes - 2 
+
+---------------------------------
+3_regular_50_nodes
+
+nodes 0 to 9 distance is 7
+
+Flood: 
+ttl - 5
+
+Random Walk:
+ttl - 5
+walkers - 5
+
+Normalized Flood: 
+ttl - 5
+max nodes - 2 
+
+---------------------------------
+5_regular_200_nodes
+
+nodes 0 to 197 distance is 5
+
+Flood: 
+ttl - 3
+
+Random Walk:
+ttl - 3
+walkers - 5
+
+Normalized Flood: 
+ttl - 3
+max nodes - 3
+
+---------------------------------
+4_regular_200_nodes
+
+nodes 0 to 169 distance is 5
+
+Flood: 
+ttl - 2
+
+Random Walk:
+ttl - 2
+walkers - 5
+
+Normalized Flood: 
+ttl - 2 
+max nodes - 2
+
+---------------------------------
+tree with 80 nodes
+
+nodes 0 to 79 distance is 5
+
+Flood: 
+ttl - 3
+
+Random Walk:
+ttl - 3
+walkers - 3
+
+Normalized Flood: 
+ttl - 3
+max nodes - 1
+
+---------------------------------
+cluster_6_wit_4_nodes_each
+
+nodes 0 to 2 distance is 1
+
+Flood: 
+ttl - 3
+
+Random Walk:
+ttl - 3
+walkers - 3
+
+Normalized Flood: 
+ttl - 3
+max nodes - 3
+
+---------------------------------
+megagraph_3_clusters
+
+
+
+Flood: 
+ttl - 3
+
+Random Walk:
+ttl - 3
+walkers - 3
+
+Normalized Flood: 
+ttl - 3
+max nodes - 2
+
+
+---------------------------------
+megagraph_5_clusters
+
+
+Flood: 
+ttl - 3
+
+Random Walk:
+ttl - 3
+walkers - 5
+
+Normalized Flood: 
+ttl - 3
+max nodes - 3
