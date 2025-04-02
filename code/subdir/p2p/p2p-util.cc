@@ -6,27 +6,70 @@
 
 #include <cmath>
 #include <fstream>
+#include <iomanip>
 #include <iostream>
 #include <math.h>
 #include <sstream>
 #include <unistd.h>
 #include <vector>
 
+#define NS3_FOLDER "scratch/code/stats/"
 NS_LOG_COMPONENT_DEFINE("Util");
+
+struct FILENAMES
+{
+    std::string stats;
+    std::string query_hits;
+};
 
 namespace ns3
 {
 
-void
-P2PUtil::saveStatsAsCSV(NodeContainer nodes, std::string filename)
+FILENAMES
+generateFileName(std::string algorithmFolder, int searchAlgorithmInt)
 {
-    std::ofstream csvFile(filename);
-    if (!csvFile.is_open())
+    std::string algorithm;
+    if (searchAlgorithmInt == 0)
     {
-        NS_LOG_ERROR("Failed to open CSV file: " << filename);
+        algorithm = "flood";
+    }
+    else if (searchAlgorithmInt == 1)
+    {
+        algorithm = "random_walk";
+    }
+    else if (searchAlgorithmInt == 2)
+    {
+        algorithm = "n_flood";
+    }
+
+    std::time_t now = std::time(nullptr);
+    std::tm tm = *std::localtime(&now);
+    std::ostringstream oss;
+    oss << std::put_time(&tm, "%H%M%S");
+    std::string timestamp = oss.str();
+
+    FILENAMES filenames = {
+        NS3_FOLDER + algorithmFolder + "/" + algorithm + "_" + timestamp + ".csv",
+        NS3_FOLDER + algorithmFolder + "/" + algorithm + "_queryhits_" + timestamp + ".csv"};
+    return filenames;
+}
+
+void
+P2PUtil::saveStatsAsCSV(NodeContainer nodes, std::string algorithmFolder, int searchAlgorithmInt)
+{
+    FILENAMES filenames = generateFileName(algorithmFolder, searchAlgorithmInt);
+    std::string filename = filenames.stats;
+    std::string queryHitsFilename = filenames.query_hits;
+
+    std::ofstream csvFile(filename);
+    std::ofstream queryhitCsvFile(queryHitsFilename);
+    if (!csvFile.is_open() || !queryhitCsvFile.is_open())
+    {
+        NS_LOG_ERROR("Failed to open CSV files");
         return;
     }
 
+    // ----------- main csv file ----------------
     // Write CSV header
     csvFile << "NodeID,IsSink,IsSource,QueryHits,ReceivedRequests,"
             << "SentRequests,ForwardedQueryHits,TriedRequests,"
@@ -63,37 +106,48 @@ P2PUtil::saveStatsAsCSV(NodeContainer nodes, std::string filename)
     csvFile.close();
     NS_LOG_INFO("Saved statistics to: " << filename);
 
-    // printing
-    for (int i = 0; i < nodeNum; i++)
+    // ----------- query hit csv file ----------------
+    queryhitCsvFile << "QueryHitId, Hops\n";
+    Ptr<P2PApplication> app = DynamicCast<P2PApplication>(nodes.Get(0)->GetApplication(0));
+    auto hops = app->GetHopsForQueryHits();
+    for (int i = 1; i < hops.size() + 1; i++)
     {
-        Ptr<P2PApplication> app = DynamicCast<P2PApplication>(nodes.Get(i)->GetApplication(0));
-        if (app)
-        {
-            NS_LOG_INFO("Node " << i << ":");
-
-            bool isSinkNode = app->IsSinkNode();
-            bool isSrcNode = app->IsSrcNode();
-
-            if (isSinkNode || isSrcNode)
-            {
-                NS_LOG_INFO("  Query Hits: " << app->GetQueryHits());
-                auto hops = app->GetHopsForQueryHits();
-                for (int i = 1; i < hops.size() + 1; i++)
-                {
-                    NS_LOG_INFO("       Hops for Query Hit " << i << " is " << hops[i - 1]);
-                }
-            }
-
-            NS_LOG_INFO("  Received Requests: " << app->GetReceivedRequests());
-            NS_LOG_INFO("  Sent Requests: " << app->GetSentRequests());
-            NS_LOG_INFO("  Forwarded Query Hits: " << app->GetForwardedQueryHits());
-            if (isSrcNode)
-            {
-                NS_LOG_INFO("  Tried Requests: " << app->GetTriedRequests());
-                NS_LOG_INFO("  Initialized Requests: " << app->GetInitializedRequests());
-            }
-        }
+        queryhitCsvFile << i << "," << hops[i - 1] << "\n";
     }
+    queryhitCsvFile.close();
+    NS_LOG_INFO("Saved query hits to: " << queryHitsFilename);
+
+    // DEBUG
+    // for (int i = 0; i < nodeNum; i++)
+    // {
+    //     Ptr<P2PApplication> app = DynamicCast<P2PApplication>(nodes.Get(i)->GetApplication(0));
+    //     if (app)
+    //     {
+    //         NS_LOG_INFO("Node " << i << ":");
+
+    //         bool isSinkNode = app->IsSinkNode();
+    //         bool isSrcNode = app->IsSrcNode();
+
+    //         if (isSinkNode || isSrcNode)
+    //         {
+    //             NS_LOG_INFO("  Query Hits: " << app->GetQueryHits());
+    //             auto hops = app->GetHopsForQueryHits();
+    //             for (int i = 1; i < hops.size() + 1; i++)
+    //             {
+    //                 NS_LOG_INFO("       Hops for Query Hit " << i << " is " << hops[i - 1]);
+    //             }
+    //         }
+
+    //         NS_LOG_INFO("  Received Requests: " << app->GetReceivedRequests());
+    //         NS_LOG_INFO("  Sent Requests: " << app->GetSentRequests());
+    //         NS_LOG_INFO("  Forwarded Query Hits: " << app->GetForwardedQueryHits());
+    //         if (isSrcNode)
+    //         {
+    //             NS_LOG_INFO("  Tried Requests: " << app->GetTriedRequests());
+    //             NS_LOG_INFO("  Initialized Requests: " << app->GetInitializedRequests());
+    //         }
+    //     }
+    // }
 }
 
 std::vector<std::vector<int>>

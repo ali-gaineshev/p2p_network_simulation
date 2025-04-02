@@ -14,7 +14,9 @@ class P2PApplication; // Forward declaration
 class P2PUtil
 {
   public:
-    static void saveStatsAsCSV(NodeContainer nodes, std::string filename);
+    static void saveStatsAsCSV(NodeContainer nodes,
+                               std::string algorithmFolder,
+                               int searchAlgorithmInt);
 
     static std::vector<std::vector<int>> readGraphFromFile(const std::string& filename);
     static void printGraph(const std::vector<std::vector<int>>& adjList);
@@ -33,12 +35,12 @@ class P2PUtil
                                   AnimationInterface& anim,
                                   NodeContainer& nodes);
     static void PositionClusterNodes(uint32_t nodeIndex,
-                                  double centerX,
-                                  double centerY,
-                                  double repRadius,
-                                  double memberRadius,
-                                  AnimationInterface& anim,
-                                  NodeContainer& nodes);
+                                     double centerX,
+                                     double centerY,
+                                     double repRadius,
+                                     double memberRadius,
+                                     AnimationInterface& anim,
+                                     NodeContainer& nodes);
     static void PrintNodeInfo(Ptr<P2PApplication> app);
     static void PrintSocketBindings(Ptr<P2PApplication> app);
     static void PrintAddresses(Ptr<P2PApplication> app);

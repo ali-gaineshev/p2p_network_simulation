@@ -12,10 +12,9 @@
 #include "ns3/network-module.h"
 #include "ns3/point-to-point-module.h"
 
-#include <unordered_set>
 #include <regex>
 #include <string>
-
+#include <unordered_set>
 
 #define DEFAULT_TTL 5
 using namespace ns3;
@@ -32,6 +31,7 @@ main(int argc, char* argv[])
     LogComponentEnable("NetworkBuilder", LOG_LEVEL_INFO);
     LogComponentEnable("Util", LOG_LEVEL_INFO);
 
+    std::string algorithmFolder = "";
     std::string fileName;
     uint32_t nodeNum = -1;
     int srcIndex = -1;
@@ -51,6 +51,9 @@ main(int argc, char* argv[])
     cmd.AddValue("fileName",
                  "Name of the file. May be empty. Use this for D-Regular and Clusters.",
                  fileName);
+    cmd.AddValue("outputFolder",
+                 "Output folder for the CSV file. For example: `3_regular_10_nodes`",
+                 algorithmFolder);
     cmd.AddValue("walkers", "K-walkers in Random Walk or k in Normalized Flood ", walkers);
     cmd.AddValue("ttl", "Default TTL for the query. Default is 5", ttl);
     cmd.AddValue("searchAlg",
@@ -86,7 +89,7 @@ main(int argc, char* argv[])
         Ptr<P2PApplication> app = CreateObject<P2PApplication>();
         net.nodes.Get(i)->AddApplication(app);
         app->SetStartTime(Seconds(1.0));
-        app->SetStopTime(Seconds(15.0)); // adjust runtime
+        app->SetStopTime(Seconds(20.0)); // adjust runtime
         app->SetAddresses();
         app->SetPeers(net.nodeNeighbors[i]);
         // logger
@@ -129,7 +132,7 @@ main(int argc, char* argv[])
     anim.UpdateNodeDescription(sinkIndex, "Sink");
     anim.UpdateNodeColor(sinkIndex, 0, 0, 255);
 
-    // determine graph type for NetAnim positioning 
+    // determine graph type for NetAnim positioning
     std::regex clusterPattern(".*cluster.*", std::regex_constants::icase);
     std::regex megaGraphPattern(".*megagraph.*", std::regex_constants::icase);
 
@@ -137,7 +140,8 @@ main(int argc, char* argv[])
     {
         P2PUtil::PositionTreeNodes(0, 45.5, 10.0, 20, 15, anim, net.nodes);
     }
-    if (std::regex_match(fileName, clusterPattern) || std::regex_match(fileName, megaGraphPattern)) {
+    if (std::regex_match(fileName, clusterPattern) || std::regex_match(fileName, megaGraphPattern))
+    {
         P2PUtil::PositionClusterNodes(0, 50.0, 50.0, 30.0, 10.0, anim, net.nodes);
     }
 
@@ -150,7 +154,7 @@ main(int argc, char* argv[])
     DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(0))->SetSrcNode();
     DynamicCast<P2PApplication>(net.nodes.Get(sinkIndex)->GetApplication(0))->SetSinkNode();
 
-    P2PUtil::saveStatsAsCSV(net.nodes, "p2p-network-stats.csv");
+    P2PUtil::saveStatsAsCSV(net.nodes, algorithmFolder, searchAlgorithmInt);
 
     Simulator::Destroy();
 

@@ -174,16 +174,21 @@ To set up initial ttl:
 --ttl=X
 ```
 
+To set output folder please use:
+```
+--outputFolder=3_regular_50_nodes
+```
+
 #### Example calls:
 
 * Flood with initial ttl 5 and tree topology
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=1 --nodeNum=10 --srcIndex=0 --sinkIndex=9  --ttl=5"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=1 --nodeNum=10 --srcIndex=0 --sinkIndex=9  --ttl=5 --outputFolder=misc"
 ```
 
 * running a file with random walk and 6 walkers
 ```
- ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/2_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --walkers=6"
+ ./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_50_nodes.txt  --srcIndex=0 --sinkIndex=9 --walkers=5 --outputFolder=3_regular_50_nodes"
 ```
 
 #### Running Network Anim
