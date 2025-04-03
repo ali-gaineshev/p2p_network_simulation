@@ -23,11 +23,13 @@ class P2PStats
 
     void IncrementQueryHits();
     void AddHopsForQueryHit(int hops);
+    void AddSecondsForQueryHit(double seconds);
 
     // Getters
     bool GetIsSinkNode() const;
     bool GetIsSrcNode() const;
     std::vector<int> GetHopsForQueryHits() const;
+    std::vector<double> GetSecondsForQueryHits() const;
     int GetQueryHits() const;
     int GetTriedRequests() const;
     int GetInitializedRequests() const;
@@ -50,8 +52,9 @@ class P2PStats
     int receivedRequests; // any received requests
 
     // query hits
-    int n_queryHits;                   // number of query hits
-    std::vector<int> hopsForQueryHits; // hops for query hits
+    int n_queryHits;                         // number of query hits
+    std::vector<int> hopsForQueryHits;       // hops for query hits
+    std::vector<double> secondsForQueryHits; // seconds for query hits
 };
 
 #endif // P2P_STATS_H

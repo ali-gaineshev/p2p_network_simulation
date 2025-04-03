@@ -38,6 +38,12 @@ P2PStats::AddHopsForQueryHit(int hops)
 }
 
 void
+P2PStats::AddSecondsForQueryHit(double seconds)
+{
+    secondsForQueryHits.push_back(seconds);
+}
+
+void
 P2PStats::IncrementQueryHits()
 {
     n_queryHits++;
@@ -84,6 +90,12 @@ std::vector<int>
 P2PStats::GetHopsForQueryHits() const
 {
     return hopsForQueryHits;
+}
+
+std::vector<double>
+P2PStats::GetSecondsForQueryHits() const
+{
+    return secondsForQueryHits;
 }
 
 int

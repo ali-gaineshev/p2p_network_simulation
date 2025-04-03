@@ -521,7 +521,7 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     // check if there is a loop
     if (IsCurrentNodeInPath(p2pPacket.GetPath()))
     {
-        NS_LOG_INFO("Loop detected. Killing the packet");
+        NS_LOG_DEBUG("Loop detected. Killing the packet");
         return;
     }
 
@@ -537,8 +537,11 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
             m_queryHit = true;
 
             // stats
+            double latency =
+                Simulator::Now().GetSeconds() - (ceil(Simulator::Now().GetSeconds()) - 1);
             stats.IncrementQueryHits();
             stats.AddHopsForQueryHit(static_cast<int>(p2pPacket.GetHops()));
+            stats.AddSecondsForQueryHit(latency);
         }
 
         return; // Stop processing since we don't need to forward it back to the sender
@@ -587,6 +590,7 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
             // stats
             stats.IncrementQueryHits();
             stats.AddHopsForQueryHit(static_cast<int>(p2pPacket.GetHops()));
+            stats.AddSecondsForQueryHit(Simulator::Now().GetSeconds());
         }
 
         ForwardQueryHit(p2pPacket, senderIndex); // Send a response back to the requester
@@ -664,6 +668,12 @@ std::vector<int>
 P2PApplication::GetHopsForQueryHits()
 {
     return stats.GetHopsForQueryHits();
+}
+
+std::vector<double>
+P2PApplication::GetSecondsForQueryHits()
+{
+    return stats.GetSecondsForQueryHits();
 }
 
 int

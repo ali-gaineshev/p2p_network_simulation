@@ -107,12 +107,16 @@ P2PUtil::saveStatsAsCSV(NodeContainer nodes, std::string algorithmFolder, int se
     NS_LOG_INFO("Saved statistics to: " << filename);
 
     // ----------- query hit csv file ----------------
-    queryhitCsvFile << "QueryHitId, Hops\n";
+    queryhitCsvFile << "QueryHitId, Hops, Seconds\n";
     Ptr<P2PApplication> app = DynamicCast<P2PApplication>(nodes.Get(0)->GetApplication(0));
     auto hops = app->GetHopsForQueryHits();
+    auto seconds = app->GetSecondsForQueryHits();
+
     for (int i = 1; i < hops.size() + 1; i++)
     {
-        queryhitCsvFile << i << "," << hops[i - 1] << "\n";
+        double second = seconds[i - 1];
+
+        queryhitCsvFile << i << "," << hops[i - 1] << "," << second << "\n";
     }
     queryhitCsvFile.close();
     NS_LOG_INFO("Saved query hits to: " << queryHitsFilename);

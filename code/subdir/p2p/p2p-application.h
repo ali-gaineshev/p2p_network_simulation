@@ -69,6 +69,7 @@ class P2PApplication : public Application
     bool IsSrcNode();
     int GetQueryHits();
     std::vector<int> GetHopsForQueryHits();
+    std::vector<double> GetSecondsForQueryHits();
     int GetSentRequests();
     int GetReceivedRequests();
     int GetForwardedQueryHits();
