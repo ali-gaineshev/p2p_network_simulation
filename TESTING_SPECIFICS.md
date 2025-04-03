@@ -81,6 +81,8 @@ max walkers - 2
 
 ttl - 3
 
+ttl increases by 5
+
 ***
 Flood: 
 
@@ -94,7 +96,7 @@ Random Walk:
 walkers - 5
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/5_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=197 --outputFolder=5_regular_200_nodes/random_walk --ttl=3 --walkers=6"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/5_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=197 --outputFolder=5_regular_200_nodes/random_walk --ttl=3 --walkers=5"
 ```
 
 ***
@@ -113,11 +115,13 @@ max nodes - 3
 
 ttl - 2
 
+ttl increases by 5
+
 ***
 Flood: 
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/4_regular_200_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=4_regular_200_nodes/flood --ttl=3"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/4_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=169 --outputFolder=4_regular_200_nodes/flood --ttl=2"
 ```
 
 ***
@@ -126,7 +130,7 @@ Random Walk:
 walkers - 5
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/5_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=5_regular_200_nodes/random_walk --ttl=3 --walkers=6"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/4_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=197 --outputFolder=4_regular_200_nodes/random_walk --ttl=2 --walkers=5"
 ```
 
 ***
@@ -135,69 +139,145 @@ Normalized Flood:
 max nodes - 2
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/5_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=5_regular_200_nodes/normalized_flood --ttl=3 --walkers=3"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/4_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=197 --outputFolder=4_regular_200_nodes/normalized_flood --ttl=2 --walkers=2"
 ```
 
 ---------------------------------
-tree with 80 nodes
+# tree with 80 nodes
 
-nodes 0 to 79 distance is 5
+**nodes 0 to 79 distance is 5**
 
+ttl - 3
+
+ttl increases by 5
+
+***
 Flood: 
-ttl - 3
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=1 --nodeNum=80 --srcIndex=0 --sinkIndex=79  --ttl=3 --outputFolder=tree_with_80_nodes/flood"
+```
+
+***
 Random Walk:
-ttl - 3
+
 walkers - 3
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=1 --nodeNum=80 --srcIndex=0 --sinkIndex=79  --ttl=3 --outputFolder=tree_with_80_nodes/random_walk --walkers=3"
+```
+
+***
 Normalized Flood: 
-ttl - 3
+
 max nodes - 1
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=1 --nodeNum=80 --srcIndex=0 --sinkIndex=79  --ttl=3 --outputFolder=tree_with_80_nodes/normalized_flood --walkers=1"
+```
+
 ---------------------------------
-cluster_6_wit_4_nodes_each
+# cluster_6_with_4_nodes_each
 
-nodes 0 to 2 distance is 1
+**nodes 0 to 2 distance is 1**
 
+ttl - 3
+
+ttl increases by 5
+
+***
 Flood: 
-ttl - 3
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/cluster_6_with_4_nodes_each.txt  --srcIndex=0 --sinkIndex=2 --outputFolder=cluster_6_with_4_nodes_each/flood --ttl=3"
+```
+
+***
 Random Walk:
-ttl - 3
+
 walkers - 3
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/cluster_6_with_4_nodes_each.txt  --srcIndex=0 --sinkIndex=2 --outputFolder=cluster_6_with_4_nodes_each/random_walk --ttl=3 --walkers=3"
+```
+
+***
 Normalized Flood: 
-ttl - 3
+
 max nodes - 3
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/cluster_6_with_4_nodes_each.txt  --srcIndex=0 --sinkIndex=2 --outputFolder=cluster_6_with_4_nodes_each/normalized_flood --ttl=3 --walkers=3"
+```
+
 ---------------------------------
-megagraph_3_clusters
+# megagraph_3_clusters
 
+**nodes 0 to 47 distance is 2**
 
+ttl - 3
 
+ttl increases by 5
+
+***
 Flood: 
-ttl - 3
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/megagraph_3_clusters.txt  --srcIndex=0 --sinkIndex=47 --outputFolder=megagraph_3_clusters/flood --ttl=3"
+```
+
+***
 Random Walk:
-ttl - 3
+
 walkers - 3
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/megagraph_3_clusters.txt  --srcIndex=0 --sinkIndex=47 --outputFolder=megagraph_3_clusters/random_walk --ttl=3 --walkers=3"
+```
+
+***
 Normalized Flood: 
-ttl - 3
+
 max nodes - 2
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/megagraph_3_clusters.txt  --srcIndex=0 --sinkIndex=47 --outputFolder=megagraph_3_clusters/normalized_flood --ttl=3 --walkers=2"
+```
+
+
+
 
 ---------------------------------
-megagraph_5_clusters
+# megagraph_5_clusters
 
+**nodes 0 to 52 distance is 3**
 
+ttl - 3
+
+ttl increases by 5
+
+***
 Flood: 
-ttl - 3
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/megagraph_5_clusters.txt  --srcIndex=0 --sinkIndex=52 --outputFolder=megagraph_5_clusters/flood --ttl=3"
+```
+
+***
 Random Walk:
-ttl - 3
+
 walkers - 5
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/megagraph_5_clusters.txt  --srcIndex=0 --sinkIndex=52 --outputFolder=megagraph_5_clusters/random_walk --ttl=3 --walkers=5"
+```
+
+***
 Normalized Flood: 
-ttl - 3
+
 max nodes - 3
+
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/megagraph_5_clusters.txt  --srcIndex=0 --sinkIndex=52 --outputFolder=megagraph_5_clusters/normalized_flood --ttl=3 --walkers=3"
+```
+

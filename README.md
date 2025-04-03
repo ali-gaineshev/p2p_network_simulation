@@ -80,33 +80,6 @@ Create and simluate a decentralized unstructured peer-to-peer network, gathering
 - cmake
 - git
 
-#### Network simulator 3 setup
-
-#### MacOS
-
-https://www.nsnam.org/docs/installation/html/macos.html
-
-Follow the steps below to isntall and setup NS-3 on macOS
-
-STEP ONE
-
-Install [Homebrew](https://brew.sh/) `/bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"`
-
-using brew install the following
-`brew install gcc` GNU Compiler Collection
-`brew install python@3.11` (most recent versions will work as well)
-Install the required libraries for Network Simulator
-
-- sqlite:`brew install sqlite`
-- libzml2:`brew install libxml2`
-- NetAnim: `brew install qt@5`
-- GNUplot: `brew install gnuplot`
-
-While sqlite and libxml12 are not being used in out implementation. However, we are unsure of how not having them install may leave to inconsistencies.
-
-STEP 2
-
-At this point you can choose what route you would like to take when installing NS3 you can choose to do git or \_\_ version
 
 GITHUB VERSION
 
