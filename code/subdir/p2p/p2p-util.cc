@@ -13,20 +13,14 @@
 #include <unistd.h>
 #include <vector>
 
-#define NS3_FOLDER "scratch/code/stats/"
+#define NS3_FOLDER "scratch/stats/"
 NS_LOG_COMPONENT_DEFINE("Util");
-
-struct FILENAMES
-{
-    std::string stats;
-    std::string query_hits;
-};
 
 namespace ns3
 {
 
 FILENAMES
-generateFileName(std::string algorithmFolder, int searchAlgorithmInt)
+P2PUtil::generateFileName(std::string algorithmFolder, int searchAlgorithmInt)
 {
     std::string algorithm;
     if (searchAlgorithmInt == 0)
@@ -50,16 +44,18 @@ generateFileName(std::string algorithmFolder, int searchAlgorithmInt)
 
     FILENAMES filenames = {
         NS3_FOLDER + algorithmFolder + "/" + algorithm + "_" + timestamp + ".csv",
-        NS3_FOLDER + algorithmFolder + "/" + algorithm + "_queryhits_" + timestamp + ".csv"};
+        NS3_FOLDER + algorithmFolder + "/" + algorithm + "_queryhits_" + timestamp + ".csv",
+        NS3_FOLDER + algorithmFolder + "/" + algorithm + "_netanim_" + timestamp + ".xml"};
     return filenames;
 }
 
 void
-P2PUtil::saveStatsAsCSV(NodeContainer nodes, std::string algorithmFolder, int searchAlgorithmInt)
+P2PUtil::saveStatsAsCSV(NodeContainer nodes, FILENAMES fileNames)
 {
-    FILENAMES filenames = generateFileName(algorithmFolder, searchAlgorithmInt);
-    std::string filename = filenames.stats;
-    std::string queryHitsFilename = filenames.query_hits;
+    std::string filename = fileNames.stats;
+    std::string queryHitsFilename = fileNames.query_hits;
+
+    // netAnim
 
     std::ofstream csvFile(filename);
     std::ofstream queryhitCsvFile(queryHitsFilename);

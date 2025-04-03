@@ -113,7 +113,8 @@ main(int argc, char* argv[])
                             walkers);
     }
 
-    // Create XML animation file
+    // Generate file names for output
+    FILENAMES fileNames = P2PUtil::generateFileName(algorithmFolder, searchAlgorithmInt);
 
     // this generates warnings but if it's not tree (file) then the animation is not correct
     MobilityHelper mobility;
@@ -125,7 +126,7 @@ main(int argc, char* argv[])
     mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
     mobility.InstallAll();
 
-    AnimationInterface anim("p2p-network-routing.xml");
+    AnimationInterface anim(fileNames.netAnim);
 
     anim.UpdateNodeDescription(srcIndex, "Src");
     anim.UpdateNodeColor(srcIndex, 0, 0, 255);
@@ -154,7 +155,7 @@ main(int argc, char* argv[])
     DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(0))->SetSrcNode();
     DynamicCast<P2PApplication>(net.nodes.Get(sinkIndex)->GetApplication(0))->SetSinkNode();
 
-    P2PUtil::saveStatsAsCSV(net.nodes, algorithmFolder, searchAlgorithmInt);
+    P2PUtil::saveStatsAsCSV(net.nodes, fileNames);
 
     Simulator::Destroy();
 

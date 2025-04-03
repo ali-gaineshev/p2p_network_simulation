@@ -102,7 +102,7 @@ P2PPacket::Deserialize(Buffer::Iterator start)
     hops = start.ReadU8();
 
     uint8_t pathSize = start.ReadU8();
-    if (pathSize > 20)
+    if (pathSize > 100)
     { // arbitraty -> might have ot modify
         NS_LOG_ERROR("Corrupt packet: pathSize=" << (int)pathSize);
         return 0; // drop packet

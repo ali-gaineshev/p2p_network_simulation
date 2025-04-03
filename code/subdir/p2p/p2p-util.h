@@ -6,6 +6,13 @@
 
 #include "ns3/animation-interface.h"
 
+struct FILENAMES
+{
+    std::string stats;
+    std::string query_hits;
+    std::string netAnim;
+};
+
 namespace ns3
 {
 
@@ -14,9 +21,8 @@ class P2PApplication; // Forward declaration
 class P2PUtil
 {
   public:
-    static void saveStatsAsCSV(NodeContainer nodes,
-                               std::string algorithmFolder,
-                               int searchAlgorithmInt);
+    static FILENAMES generateFileName(std::string algorithmFolder, int searchAlgorithmInt);
+    static void saveStatsAsCSV(NodeContainer nodes, FILENAMES fileNames);
 
     static std::vector<std::vector<int>> readGraphFromFile(const std::string& filename);
     static void printGraph(const std::vector<std::vector<int>>& adjList);

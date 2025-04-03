@@ -551,15 +551,12 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     // Identify the sender node and determine from which neighbor the packet was received
     Ipv4Address senderIP = p2pPacket.GetLastHop();
     int senderIndex;
-    try
+
+    // if path is empty then it will return 0.0.0.0 which doesn't make sense but it happens
+    senderIndex = GetNeighbourIndexFromNeighbourIP(senderIP);
+
+    if (senderIndex == -1)
     {
-        // so currently we need a try catch because we use GetLastHop()
-        // if path is empty then it will return 0.0.0.0 which doesn't make sense but it happens
-        senderIndex = GetNeighbourIndexFromNeighbourIP(senderIP);
-    }
-    catch (const std::runtime_error& e)
-    {
-        NS_LOG_ERROR("Error: " << e.what());
         return; // Stop processing if sender index is not found
     }
     // At this point, 'senderIndex' holds the index of the neighbor that sent the packet
@@ -774,9 +771,8 @@ P2PApplication::GetNeighbourIndexFromNeighbourIP(Ipv4Address senderIP)
         index++;
     }
 
-    // Log if no match was found, SHOULD NOT REACH THIS POINT AT ALL
-    NS_LOG_ERROR("ERROR: Could not find a match for sender IP: " << senderIP);
-    throw std::runtime_error("ERROR: Sender IP not found in the neighbor list.");
+    //  SHOULD NOT REACH THIS POINT AT ALL
+    return -1;
 }
 
 // ----------------------------------------------------------------------------
