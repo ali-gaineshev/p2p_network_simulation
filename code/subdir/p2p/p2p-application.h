@@ -47,8 +47,8 @@ class P2PApplication : public Application
     EventId m_retryEvent;
     uint32_t m_currentRetry = 0;
     SearchAlgorithm m_currentSearchAlgorithm;
-    uint32_t m_currentSinknode;
-    uint32_t m_currentTtl;
+    uint8_t m_currentSinknode;
+    uint8_t m_currentTtl;
     int m_currentWalkers;
 
     uint32_t messageIdCount;
