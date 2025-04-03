@@ -14,7 +14,7 @@ TTL increases by 1
 Flood: 
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=3_regular_10_nodes --ttl=1"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=3_regular_10_nodes/flood --ttl=1"
 ```
 
 ***
@@ -24,7 +24,7 @@ Random Walk:
 walkers - 2
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=3_regular_10_nodes --ttl=1 --walkers=2"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=3_regular_10_nodes/random_walk --ttl=1 --walkers=2"
 ```
 
 
@@ -34,7 +34,7 @@ Normalized Flood:
 walkers - 2
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=3_regular_10_nodes --ttl=1 --walkers=2"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=3_regular_10_nodes/normalized_flood --ttl=1 --walkers=2"
 ```
 
 
@@ -75,7 +75,7 @@ max walkers - 2
 ```
 
 ---------------------------------
-5_regular_200_nodes
+# 5_regular_200_nodes 
 
 **nodes 0 to 197 distance is 5**
 
@@ -85,7 +85,7 @@ ttl - 3
 Flood: 
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/5_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=5_regular_with_200_nodes/flood"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/5_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=197 --outputFolder=5_regular_200_nodes/flood --ttl=3"
 ```
 
 ***
@@ -93,10 +93,18 @@ Random Walk:
 
 walkers - 5
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/5_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=197 --outputFolder=5_regular_200_nodes/random_walk --ttl=3 --walkers=6"
+```
+
 ***
 Normalized Flood: 
 
 max nodes - 3
+
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/5_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=197 --outputFolder=5_regular_200_nodes/normalized_flood --ttl=3 --walkers=3"
+```
 
 ---------------------------------
 4_regular_200_nodes
@@ -108,15 +116,27 @@ ttl - 2
 ***
 Flood: 
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/4_regular_200_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=4_regular_200_nodes/flood --ttl=3"
+```
+
 ***
 Random Walk:
 
 walkers - 5
 
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/5_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=5_regular_200_nodes/random_walk --ttl=3 --walkers=6"
+```
+
 ***
 Normalized Flood: 
 
 max nodes - 2
+
+```
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/5_regular_with_200_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=5_regular_200_nodes/normalized_flood --ttl=3 --walkers=3"
+```
 
 ---------------------------------
 tree with 80 nodes
