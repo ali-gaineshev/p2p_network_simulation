@@ -1,20 +1,20 @@
 Query Hits:
     avg_hops = 3.51
-    avg_latency = 0.018128
+    avg_latency = 3.505263
 
 Src Node:
-    initial_requests = 10.466666666666667
-    retried_requests = 2.2666666666666666
-    query_hits = 6.8
+    initial_requests = 10.47
+    retried_requests = 2.27
+    query_hits = 6.80
     query_success_rate = 64.97%
     query_failure_rate = 35.03%
 
 Sink Node:
-    received_requests = 6.8
+    received_requests = 6.80
 
 Intermediate Nodes:
-    received_requests = 7.3999999999999995
-    sent_requests = 2.5733333333333333
-    forwarded_hits = 0.17333333333333334
+    received_requests = 7.40
+    sent_requests = 2.57
+    forwarded_hits = 0.17
     overhead = 24.83%
     efficiency = 54.11%
