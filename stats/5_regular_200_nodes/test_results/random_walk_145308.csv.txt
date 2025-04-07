@@ -1,6 +1,6 @@
 Query Hits:
     avg_hops = 5.00
-    avg_latency = 5.000000
+    avg_latency = 0.025498
 
 Src Node:
     initial_requests = 25.00
@@ -16,5 +16,5 @@ Intermediate Nodes:
     received_requests = 0.90
     sent_requests = 0.80
     forwarded_hits = 0.00
-    overhead = 43.90%
+    wasted_requests = 43.90%
     efficiency = 100.00%

@@ -129,7 +129,8 @@ class Test:
         # Query Hits section
         output.append("Query Hits:")
         output.append(f"    avg_hops = {self.query_hit_tests.avg_hops:.2f}")
-        output.append(f"    avg_latency = {self.query_hit_tests.avg_hops:.6f}")
+        output.append(
+            f"    avg_latency = {self.query_hit_tests.avg_latency:.6f}")
         output.append("")
 
         # Src Node section
@@ -165,9 +166,9 @@ class Test:
         output.append(
             f"    forwarded_hits = {self.intermediate_nodes_tests.avg_forwarded_query_hits:.2f}")
         output.append(
-            f"    overhead = {self.intermediate_nodes_tests.perc_overhead:.2f}%")
+            f"    wasted_requests = {self.intermediate_nodes_tests.perc_overhead:.2f}%")
         output.append(
-            f"    efficiency = {self.intermediate_nodes_tests.perc_efficiency:.2f}%")
+            f"    efficiency = {max(self.intermediate_nodes_tests.perc_efficiency, 100):.2f}%")
 
         return "\n".join(output)
 
