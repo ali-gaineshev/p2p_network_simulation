@@ -63,6 +63,9 @@ class IntermediateNode:
         if self.received_requests == 0:
             return 0
 
+        if self.sent_requests < self.forwarded_hits:
+            return 0
+
         return (self.sent_requests - self.forwarded_hits) / max(1, self.received_requests) * 100
 
     def efficiency(self):
@@ -76,7 +79,7 @@ class IntermediateNode:
         if self.sent_requests == 0:
             return 100
 
-        return (self.forwarded_hits / self.sent_requests) * 100
+        return max((self.forwarded_hits / self.sent_requests) * 100, 100)
 
 
 class Test:

@@ -17,4 +17,4 @@ Intermediate Nodes:
     sent_requests = 2.40
     forwarded_hits = 0.40
     overhead = 60.60%
-    efficiency = 28.50%
+    efficiency = 100.00%
