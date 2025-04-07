@@ -19,8 +19,8 @@ def main():
             subfolders = os.listdir(d)
 
             # for each algorithm
-            tests: list[Test] = []
             for alg in folders:
+                tests: list[Test] = []
                 if alg in subfolders:
                     print(f"  Folder: {alg}")
                     cur_path = os.path.join(d, alg)
