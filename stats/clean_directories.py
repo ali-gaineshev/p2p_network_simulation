@@ -3,9 +3,11 @@ import os
 
 def delete_all_files_in_subdirectories():
     root_dir = os.getcwd()
-    if ("stats" not in root_dir):
+
+    if not root_dir.endswith("stats"):
         print("Please run this script from the 'stats' directory.")
         return
+
     deleted_count = 0
     error_count = 0
 
