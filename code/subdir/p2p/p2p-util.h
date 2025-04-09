@@ -21,10 +21,13 @@ class P2PApplication; // Forward declaration
 class P2PUtil
 {
   public:
-    static FILENAMES generateFileName(std::string algorithmFolder, int searchAlgorithmInt);
+    static FILENAMES generateFileName(std::string algorithmFolder,
+                                      int searchAlgorithmInt,
+                                      bool isDisableNode);
     static void saveStatsAsCSV(NodeContainer nodes, FILENAMES fileNames);
 
     static std::vector<std::vector<int>> readGraphFromFile(const std::string& filename);
+    static std::vector<int> readDisabledNodeFile(const std::string& mainFilename);
     static void printGraph(const std::vector<std::vector<int>>& adjList);
     static void PositionLinearNodes(int curIndex,
                                     double x,

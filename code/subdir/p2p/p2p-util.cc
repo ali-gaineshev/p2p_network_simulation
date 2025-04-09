@@ -16,12 +16,17 @@
 #define NS3_FOLDER "scratch/stats/"
 NS_LOG_COMPONENT_DEFINE("Util");
 
+#define SUFFIX "_d" // for disabled nodes
+#define DISABLED_NODES_FOLDER "disabled/"
+#define ALL_NODES_FOLDER "all/"
+
 namespace ns3
 {
 
 FILENAMES
-P2PUtil::generateFileName(std::string algorithmFolder, int searchAlgorithmInt)
+P2PUtil::generateFileName(std::string algorithmFolder, int searchAlgorithmInt, bool isDisableNode)
 {
+    std::string statGraphType = isDisableNode ? DISABLED_NODES_FOLDER : ALL_NODES_FOLDER;
     std::string algorithm;
     if (searchAlgorithmInt == 0)
     {
@@ -42,10 +47,12 @@ P2PUtil::generateFileName(std::string algorithmFolder, int searchAlgorithmInt)
     oss << std::put_time(&tm, "%H%M%S");
     std::string timestamp = oss.str();
 
-    FILENAMES filenames = {
-        NS3_FOLDER + algorithmFolder + "/" + algorithm + "_" + timestamp + ".csv",
-        NS3_FOLDER + algorithmFolder + "/" + algorithm + "_queryhits_" + timestamp + ".csv",
-        NS3_FOLDER + algorithmFolder + "/" + algorithm + "_netanim_" + timestamp + ".xml"};
+    FILENAMES filenames = {NS3_FOLDER + statGraphType + algorithmFolder + "/" + algorithm + "_" +
+                               timestamp + ".csv",
+                           NS3_FOLDER + statGraphType + algorithmFolder + "/" + algorithm +
+                               "_queryhits_" + timestamp + ".csv",
+                           NS3_FOLDER + statGraphType + algorithmFolder + "/" + algorithm +
+                               "_netanim_" + timestamp + ".xml"};
     return filenames;
 }
 
@@ -76,7 +83,9 @@ P2PUtil::saveStatsAsCSV(NodeContainer nodes, FILENAMES fileNames)
     {
         Ptr<P2PApplication> app = DynamicCast<P2PApplication>(nodes.Get(i)->GetApplication(0));
         if (!app)
+        {
             continue;
+        }
 
         bool isSinkNode = app->IsSinkNode();
         bool isSrcNode = app->IsSrcNode();
@@ -155,7 +164,9 @@ P2PUtil::readGraphFromFile(const std::string& filename)
 {
     char cwd[1024];
     if (getcwd(cwd, sizeof(cwd)) != NULL)
+    {
         std::cout << "Current working dir: " << cwd << std::endl;
+    }
 
     NS_LOG_INFO("FILENAME: " << filename);
     std::ifstream file(filename);
@@ -181,19 +192,36 @@ P2PUtil::readGraphFromFile(const std::string& filename)
     return adjList;
 }
 
-// void
-// P2PUtil::printGraph(const std::vector<std::vector<int>>& adjList)
-// {
-//     for (size_t i = 0; i < adjList.size(); i++)
-//     {
-//         std::cout << i << ": ";
-//         for (int neighbor : adjList[i])
-//         {
-//             std::cout << neighbor << " ";
-//         }
-//         std::cout << std::endl;
-//     }
-// }
+std::vector<int>
+P2PUtil::readDisabledNodeFile(const std::string& mainFilename)
+{
+    std::string filename = mainFilename;
+    size_t pos = filename.find(".txt");
+
+    if (pos != std::string::npos)
+    {
+        filename.insert(pos, SUFFIX);
+    }
+
+    NS_LOG_INFO("FILENAME: " << filename);
+    std::ifstream file(filename);
+    if (!file)
+    {
+        NS_LOG_INFO("Couldn't read the file");
+        exit(1);
+    }
+
+    std::vector<int> list; // Initialize adjacency list
+
+    int vector;
+    while (file >> vector)
+    { // Read vectors
+        list.push_back(vector);
+    }
+
+    file.close();
+    return list;
+}
 
 void
 P2PUtil::PositionLinearNodes(int curIndex,
@@ -226,17 +254,23 @@ P2PUtil::PositionTreeNodes(uint32_t nodeIndex,
 {
     uint32_t numNodes = nodes.GetN();
     if (nodeIndex == numNodes)
+    {
         return;
+    }
     anim.SetConstantPosition(nodes.Get(nodeIndex), x, y);
 
     uint32_t leftChild = 2 * nodeIndex + 1;
     uint32_t rightChild = 2 * nodeIndex + 2;
 
     if (leftChild < numNodes)
+    {
         PositionTreeNodes(leftChild, x - xOffset, y + yOffset, xOffset / 2, yOffset, anim, nodes);
+    }
 
     if (rightChild < numNodes)
+    {
         PositionTreeNodes(rightChild, x + xOffset, y + yOffset, xOffset / 2, yOffset, anim, nodes);
+    }
 }
 
 // Positions Nodes in NetAnim --------------------------------------- network-sim.cc
@@ -251,7 +285,9 @@ P2PUtil::PositionClusterNodes(uint32_t nodeIndex,
 {
     uint32_t totalNodes = nodes.GetN();
     if (totalNodes == 0)
+    {
         return;
+    }
 
     anim.SetConstantPosition(nodes.Get(0), centerX, centerY);
     uint32_t currentNode = 1;

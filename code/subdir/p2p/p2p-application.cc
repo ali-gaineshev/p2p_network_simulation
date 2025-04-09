@@ -142,11 +142,17 @@ P2PApplication::ScheduleSearchWithRetry(SearchAlgorithm searchAlgorithm,
 
     // Start the first search
     if (searchAlgorithm == FLOOD)
+    {
         InitialFlood(sinknode, ttl);
+    }
     else if (searchAlgorithm == RANDOM_WALK)
+    {
         InitialRandomWalk(sinknode, ttl, walkers);
+    }
     else if (searchAlgorithm == NORMALIZED_FLOOD)
+    {
         InitialNormalizedFlood(sinknode, ttl, walkers);
+    }
 
     // Schedule retry check in 2 seconds
     m_retryEvent =
@@ -179,11 +185,17 @@ P2PApplication::CheckAndRetrySearch()
     NS_LOG_INFO("Retry #" << m_currentRetry << " with TTL=" << std::to_string(m_currentTtl));
 
     if (m_currentSearchAlgorithm == FLOOD)
+    {
         InitialFlood(m_currentSinknode, m_currentTtl);
+    }
     else if (m_currentSearchAlgorithm == RANDOM_WALK)
+    {
         InitialRandomWalk(m_currentSinknode, m_currentTtl, m_currentWalkers);
+    }
     else if (m_currentSearchAlgorithm == NORMALIZED_FLOOD)
+    {
         InitialNormalizedFlood(m_currentSinknode, m_currentTtl, m_currentWalkers);
+    }
 
     // Schedule next retry - in 2 seconds
     m_retryEvent =
@@ -198,7 +210,6 @@ P2PApplication::CheckAndRetrySearch()
 void
 P2PApplication::SetDisableNode(bool disable)
 {
-    NS_LOG_INFO("Disabling node...");
     m_isDisabled = disable;
 }
 
@@ -509,7 +520,6 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     // if node is disabled don't do anything
     if (m_isDisabled)
     {
-        NS_LOG_INFO("Node is disabled. Ignoring incoming packet.");
         return;
     }
 

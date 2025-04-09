@@ -40,6 +40,7 @@ main(int argc, char* argv[])
     int searchAlgorithmInt = -1;
     uint32_t walkers = -1;
     uint32_t ttl = DEFAULT_TTL;
+    int isDisabledNodeInt = 0;
     // Pass cl args.
     CommandLine cmd;
     cmd.AddValue("nodeNum", "Number of nodes in the network", nodeNum);
@@ -59,6 +60,9 @@ main(int argc, char* argv[])
     cmd.AddValue("searchAlg",
                  "Search Algorithm (0: FLOOD, 1: RANDOM_WALK, 2: NORMALIZED_FLOOD)",
                  searchAlgorithmInt);
+    cmd.AddValue("disabled",
+                 "0 for disabled nodes, 1 for enabled nodes. Default is 0",
+                 isDisabledNodeInt);
     cmd.Parse(argc, argv);
 
     if (searchAlgorithmInt == -1 || srcIndex == -1 || sinkIndex == -1 || networkTypeInt == -1 ||
@@ -74,6 +78,8 @@ main(int argc, char* argv[])
         return 1;
     }
 
+    bool isDisabledNode = isDisabledNodeInt == 1 ? true : false;
+
     // Convert int to enum
     NetworkType networkType = static_cast<NetworkType>(networkTypeInt);
     SearchAlgorithm searchAlgorithm = static_cast<SearchAlgorithm>(searchAlgorithmInt);
@@ -82,6 +88,10 @@ main(int argc, char* argv[])
     P2PNetwork net = CreateP2PNetwork(networkType, nodeNum, fileName);
     // reassign
     nodeNum = net.nodes.GetN();
+
+    // get disabled nodes
+    std::vector<int> disabledNodes = P2PUtil::readDisabledNodeFile(fileName);
+    int disabledNodePointer = 0;
 
     // Install the P2PApplication for each node
     for (uint32_t i = 0; i < net.nodes.GetN(); ++i)
@@ -92,6 +102,13 @@ main(int argc, char* argv[])
         app->SetStopTime(Seconds(20.0)); // adjust runtime
         app->SetAddresses();
         app->SetPeers(net.nodeNeighbors[i]);
+
+        // set disabled nodes
+        if (isDisabledNode && i == disabledNodes[disabledNodePointer])
+        {
+            app->SetDisableNode(true);
+            disabledNodePointer++;
+        }
         // logger
         // Simulator::Schedule(Seconds(1.1), &P2PApplication::LogNodeInfo, app);
     }
@@ -114,7 +131,8 @@ main(int argc, char* argv[])
     }
 
     // Generate file names for output
-    FILENAMES fileNames = P2PUtil::generateFileName(algorithmFolder, searchAlgorithmInt);
+    FILENAMES fileNames =
+        P2PUtil::generateFileName(algorithmFolder, searchAlgorithmInt, isDisabledNode);
 
     // this generates warnings but if it's not tree (file) then the animation is not correct
     MobilityHelper mobility;
