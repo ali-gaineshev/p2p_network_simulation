@@ -136,7 +136,7 @@ P2PPacket::Print(std::ostream& os) const
     {
         os << hop << " ";
     }
-    os << "]";
+    os << "]\n";
 }
 
 // prints path
@@ -179,7 +179,9 @@ void
 P2PPacket::RemoveLastHop()
 {
     if (!path.empty())
+    {
         path.pop_back();
+    }
 }
 
 void

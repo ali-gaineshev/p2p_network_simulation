@@ -72,7 +72,7 @@ P2PApplication::StartApplication()
 {
     Ptr<Node> node = GetNode();
     Ptr<Ipv4> ipv4 = node->GetObject<Ipv4>();
-
+    m_queryCache = QUERY_CACHE();
     // first interface is a loopback one. Avoid it.
     for (uint32_t i = 1; i < ipv4->GetNInterfaces(); i++)
     {
@@ -139,19 +139,19 @@ P2PApplication::ScheduleSearchWithRetry(SearchAlgorithm searchAlgorithm,
     m_currentSinknode = sinknode;
     m_currentTtl = ttl;
     m_currentWalkers = walkers;
-
+    uint32_t msgid = 0;
     // Start the first search
     if (searchAlgorithm == FLOOD)
     {
-        InitialFlood(sinknode, ttl);
+        InitialFlood(sinknode, ttl, msgid);
     }
     else if (searchAlgorithm == RANDOM_WALK)
     {
-        InitialRandomWalk(sinknode, ttl, walkers);
+        InitialRandomWalk(sinknode, ttl, walkers, msgid);
     }
     else if (searchAlgorithm == NORMALIZED_FLOOD)
     {
-        InitialNormalizedFlood(sinknode, ttl, walkers);
+        InitialNormalizedFlood(sinknode, ttl, walkers, msgid);
     }
 
     // Schedule retry check in 2 seconds
@@ -168,7 +168,7 @@ P2PApplication::CheckAndRetrySearch()
         Simulator::Cancel(m_retryEvent);
         return;
     }
-
+    // current retry will also act as message Id
     m_currentRetry++;
     // stats
     stats.IncrementTriedRequests();
@@ -186,15 +186,15 @@ P2PApplication::CheckAndRetrySearch()
 
     if (m_currentSearchAlgorithm == FLOOD)
     {
-        InitialFlood(m_currentSinknode, m_currentTtl);
+        InitialFlood(m_currentSinknode, m_currentTtl, m_currentRetry);
     }
     else if (m_currentSearchAlgorithm == RANDOM_WALK)
     {
-        InitialRandomWalk(m_currentSinknode, m_currentTtl, m_currentWalkers);
+        InitialRandomWalk(m_currentSinknode, m_currentTtl, m_currentWalkers, m_currentRetry);
     }
     else if (m_currentSearchAlgorithm == NORMALIZED_FLOOD)
     {
-        InitialNormalizedFlood(m_currentSinknode, m_currentTtl, m_currentWalkers);
+        InitialNormalizedFlood(m_currentSinknode, m_currentTtl, m_currentWalkers, m_currentRetry);
     }
 
     // Schedule next retry - in 2 seconds
@@ -251,7 +251,8 @@ P2PApplication::ForwardQueryHit(P2PPacket ppacket, int lastHopIndex)
  * Normalized Flood
  */
 void
-P2PApplication::SendPacketFromSrc(MessageType type,
+P2PApplication::SendPacketFromSrc(uint32_t msgid,
+                                  MessageType type,
                                   Ipv4Address dest,
                                   uint8_t ttl,
                                   Ipv4Address curIP,
@@ -259,7 +260,6 @@ P2PApplication::SendPacketFromSrc(MessageType type,
                                   int neighbourIndex)
 {
     Ptr<Packet> packet = Create<Packet>();
-    uint32_t msgid = 0;
     // start hop at 0, and path at empty
     P2PPacket p2pPacket(type, msgid, curIP, dest, ttl - 1, 0, sinkn, {});
     p2pPacket.AddToPath(curIP);
@@ -280,13 +280,13 @@ P2PApplication::SendPacketFromSrc(MessageType type,
  * first flooding from src
  */
 void
-P2PApplication::InitialFlood(uint32_t sinknode, uint32_t ttl)
+P2PApplication::InitialFlood(uint32_t sinknode, uint32_t ttl, uint32_t msgid)
 {
     for (uint32_t i = 0; i < m_ipv4Addresses.size(); ++i)
     {
         Ipv4Address curIPV4 = m_ipv4Addresses[i];
         Ipv4Address curNeighbor = m_neighbours[i];
-        SendPacketFromSrc(QUERY, curNeighbor, ttl, curIPV4, sinknode, i);
+        SendPacketFromSrc(msgid, QUERY, curNeighbor, ttl, curIPV4, sinknode, i);
     }
 }
 
@@ -336,7 +336,10 @@ P2PApplication::FloodExceptSender(P2PPacket p2pPacket, int excludeIndex)
  * first normalized flooding from src
  */
 void
-P2PApplication::InitialNormalizedFlood(uint32_t sinknode, uint32_t ttl, int howManyNodes)
+P2PApplication::InitialNormalizedFlood(uint32_t sinknode,
+                                       uint32_t ttl,
+                                       int howManyNodes,
+                                       uint32_t msgid)
 {
     // seed for randomness
     std::random_device rd;
@@ -360,7 +363,7 @@ P2PApplication::InitialNormalizedFlood(uint32_t sinknode, uint32_t ttl, int howM
         Ipv4Address curIP = m_ipv4Addresses[randomIndex];
         Ipv4Address neighborIP = m_neighbours[randomIndex];
 
-        SendPacketFromSrc(QUERY_NF, neighborIP, ttl, curIP, sinknode, randomIndex);
+        SendPacketFromSrc(msgid, QUERY_NF, neighborIP, ttl, curIP, sinknode, randomIndex);
     }
 }
 
@@ -428,7 +431,7 @@ P2PApplication::NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeInde
  * first random walk from src. k amount of walks to send
  */
 void
-P2PApplication::InitialRandomWalk(uint32_t sinknode, uint32_t ttl, int k)
+P2PApplication::InitialRandomWalk(uint32_t sinknode, uint32_t ttl, int k, uint32_t msgid)
 {
     // seed for randomness
     std::random_device rd;
@@ -448,7 +451,7 @@ P2PApplication::InitialRandomWalk(uint32_t sinknode, uint32_t ttl, int k)
         Ipv4Address curIP = m_ipv4Addresses[randomIndex];
         Ipv4Address neighborIP = m_neighbours[randomIndex];
 
-        SendPacketFromSrc(QUERY_RW, neighborIP, ttl, curIP, sinknode, randomIndex);
+        SendPacketFromSrc(msgid, QUERY_RW, neighborIP, ttl, curIP, sinknode, randomIndex);
     }
 }
 
@@ -529,7 +532,24 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
     P2PPacket p2pPacket;
     packet->RemoveHeader(p2pPacket); // Extract the custom P2P packet header
 
-    // check if there is a loop
+    // Check cache
+    if (p2pPacket.GetMessageType() == QUERY)
+    {
+        // If cache is initialized and packet matches cached msgId with lower/equal TTL → drop
+        if (m_queryCache.initialized && p2pPacket.GetMessageId() == m_queryCache.msgId &&
+            p2pPacket.GetTtl() <= m_queryCache.ttl)
+        {
+            m_queryCache = QUERY_CACHE(); // Reset cache
+            return;
+        }
+
+        // Otherwise, update cache (whether initialized or not)
+        m_queryCache.initialized = true;
+        m_queryCache.msgId = p2pPacket.GetMessageId();
+        m_queryCache.ttl = p2pPacket.GetTtl();
+    }
+
+    // check if there is a loop in path
     if (IsCurrentNodeInPath(p2pPacket.GetPath()))
     {
         NS_LOG_DEBUG("Loop detected. Killing the packet");
@@ -664,6 +684,12 @@ bool
 P2PApplication::IsSrcNode()
 {
     return stats.GetIsSrcNode();
+}
+
+bool
+P2PApplication::IsDisabledNode()
+{
+    return m_isDisabled;
 }
 
 int

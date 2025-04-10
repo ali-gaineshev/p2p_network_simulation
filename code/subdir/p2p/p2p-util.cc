@@ -74,7 +74,7 @@ P2PUtil::saveStatsAsCSV(NodeContainer nodes, FILENAMES fileNames)
 
     // ----------- main csv file ----------------
     // Write CSV header
-    csvFile << "NodeID,IsSink,IsSource,QueryHits,ReceivedRequests,"
+    csvFile << "NodeID,IsSink,IsSource,IsDisabled,QueryHits,ReceivedRequests,"
             << "SentRequests,ForwardedQueryHits,TriedRequests,"
             << "InitializedRequests\n";
 
@@ -89,11 +89,12 @@ P2PUtil::saveStatsAsCSV(NodeContainer nodes, FILENAMES fileNames)
 
         bool isSinkNode = app->IsSinkNode();
         bool isSrcNode = app->IsSrcNode();
-
+        bool isDisabled = app->IsDisabledNode();
         // Write basic node info
         csvFile << i << "," << (isSinkNode ? "1" : "0") << "," << (isSrcNode ? "1" : "0") << ","
-                << app->GetQueryHits() << "," << app->GetReceivedRequests() << ","
-                << app->GetSentRequests() << "," << app->GetForwardedQueryHits() << ",";
+                << (isDisabled ? "1" : "0") << "," << app->GetQueryHits() << ","
+                << app->GetReceivedRequests() << "," << app->GetSentRequests() << ","
+                << app->GetForwardedQueryHits() << ",";
 
         // Source-specific stats
         if (isSrcNode)
@@ -112,7 +113,7 @@ P2PUtil::saveStatsAsCSV(NodeContainer nodes, FILENAMES fileNames)
     NS_LOG_INFO("Saved statistics to: " << filename);
 
     // ----------- query hit csv file ----------------
-    queryhitCsvFile << "QueryHitId, Hops, Seconds\n";
+    queryhitCsvFile << "QueryHitId,Hops,Seconds\n";
     Ptr<P2PApplication> app = DynamicCast<P2PApplication>(nodes.Get(0)->GetApplication(0));
     auto hops = app->GetHopsForQueryHits();
     auto seconds = app->GetSecondsForQueryHits();
@@ -172,7 +173,7 @@ P2PUtil::readGraphFromFile(const std::string& filename)
     std::ifstream file(filename);
     if (!file)
     {
-        NS_LOG_INFO("Couldn't read the file");
+        NS_LOG_INFO("1dn't read the file");
         exit(1);
     }
 

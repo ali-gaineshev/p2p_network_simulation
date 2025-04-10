@@ -23,6 +23,13 @@ enum SearchAlgorithm
     NORMALIZED_FLOOD
 };
 
+struct QUERY_CACHE
+{
+    bool initialized;
+    uint32_t msgId;
+    uint8_t ttl;
+};
+
 namespace ns3
 
 {
@@ -34,7 +41,7 @@ class P2PApplication : public Application
     std::vector<Ptr<Socket>> m_sockets;
     std::vector<Ipv4Address> m_ipv4Addresses;
     std::vector<Ipv4Address> m_neighbours;
-    std::map<uint32_t, Ipv4Address> m_queryCache;
+    QUERY_CACHE m_queryCache;
 
     // application functionality
     bool m_isDisabled = false;
@@ -67,6 +74,7 @@ class P2PApplication : public Application
     // statistics
     bool IsSinkNode();
     bool IsSrcNode();
+    bool IsDisabledNode();
     int GetQueryHits();
     std::vector<int> GetHopsForQueryHits();
     std::vector<double> GetSecondsForQueryHits();
@@ -90,20 +98,21 @@ class P2PApplication : public Application
     void RecievePacket(Ptr<Socket> socket);
 
     // Sending from SRC
-    void SendPacketFromSrc(MessageType type,
+    void SendPacketFromSrc(uint32_t msgid,
+                           MessageType type,
                            Ipv4Address dest,
                            uint8_t ttl,
                            Ipv4Address curaddy,
                            uint32_t sinkn,
                            int neighbourIndex);
     // FLOODING
-    void InitialFlood(uint32_t sinknode, uint32_t ttl);
+    void InitialFlood(uint32_t sinknode, uint32_t ttl, uint32_t msgid);
     void FloodExceptSender(P2PPacket p2pPacket, int excludeIndex);
     // NORMALIZED FLOOD
-    void InitialNormalizedFlood(uint32_t sinknode, uint32_t ttl, int howManyNodes);
+    void InitialNormalizedFlood(uint32_t sinknode, uint32_t ttl, int howManyNodes, uint32_t msgid);
     void NormalizedFloodExceptSender(P2PPacket p2pPacket, int excludeIndex, int howManyNodes);
     // RANDOM WALKS
-    void InitialRandomWalk(uint32_t sinknode, uint32_t ttl, int k);
+    void InitialRandomWalk(uint32_t sinknode, uint32_t ttl, int k, uint32_t msgid);
     void RandomWalkExceptSender(P2PPacket p2pPacket, int excludeIndex);
 
     // BACK TRACKING

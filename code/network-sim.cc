@@ -89,8 +89,12 @@ main(int argc, char* argv[])
     // reassign
     nodeNum = net.nodes.GetN();
 
+    std::vector<int> disabledNodes;
     // get disabled nodes
-    std::vector<int> disabledNodes = P2PUtil::readDisabledNodeFile(fileName);
+    if (networkType != TREE)
+    {
+        disabledNodes = P2PUtil::readDisabledNodeFile(fileName);
+    }
     int disabledNodePointer = 0;
 
     // Install the P2PApplication for each node
