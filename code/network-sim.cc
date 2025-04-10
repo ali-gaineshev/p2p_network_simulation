@@ -1,0 +1,185 @@
+#include "subdir/p2p/p2p-application.h"
+#include "subdir/p2p/p2p-network-builder.h"
+#include "subdir/p2p/p2p-packet.h"
+#include "subdir/p2p/p2p-util.h"
+
+#include "ns3/animation-interface.h"
+#include "ns3/applications-module.h"
+#include "ns3/core-module.h"
+#include "ns3/internet-module.h"
+#include "ns3/mobility-helper.h"
+#include "ns3/netanim-module.h"
+#include "ns3/network-module.h"
+#include "ns3/point-to-point-module.h"
+
+#include <regex>
+#include <string>
+#include <unordered_set>
+
+#define DEFAULT_TTL 5
+using namespace ns3;
+NS_LOG_COMPONENT_DEFINE("P2PNetworkSim");
+
+int
+main(int argc, char* argv[])
+{
+    // enable logging
+    LogComponentEnable("P2PNetworkSim", LOG_LEVEL_INFO);
+    LogComponentEnable("P2PPacket", LOG_LEVEL_INFO);
+    LogComponentEnable("P2PApplication", LOG_LEVEL_INFO);
+    // LogComponentEnable("P2PApplication", LOG_LEVEL_DEBUG);
+    LogComponentEnable("NetworkBuilder", LOG_LEVEL_INFO);
+    LogComponentEnable("Util", LOG_LEVEL_INFO);
+
+    std::string algorithmFolder = "";
+    std::string fileName;
+    uint32_t nodeNum = -1;
+    int srcIndex = -1;
+    int sinkIndex = -1;
+    int networkTypeInt = -1;
+    int searchAlgorithmInt = -1;
+    uint32_t walkers = -1;
+    uint32_t ttl = DEFAULT_TTL;
+    int isDisabledNodeInt = 0;
+    // Pass cl args.
+    CommandLine cmd;
+    cmd.AddValue("nodeNum", "Number of nodes in the network", nodeNum);
+    cmd.AddValue("srcIndex", "Source node index", srcIndex);
+    cmd.AddValue("sinkIndex", "Sink node index", sinkIndex);
+    cmd.AddValue("networkType",
+                 "Network type (0: LINEAR, 1: TREE, 2: MESH, 3: D-REGULAR)",
+                 networkTypeInt);
+    cmd.AddValue("fileName",
+                 "Name of the file. May be empty. Use this for D-Regular and Clusters.",
+                 fileName);
+    cmd.AddValue("outputFolder",
+                 "Output folder for the CSV file. For example: `3_regular_10_nodes`",
+                 algorithmFolder);
+    cmd.AddValue("walkers", "K-walkers in Random Walk or k in Normalized Flood ", walkers);
+    cmd.AddValue("ttl", "Default TTL for the query. Default is 5", ttl);
+    cmd.AddValue("searchAlg",
+                 "Search Algorithm (0: FLOOD, 1: RANDOM_WALK, 2: NORMALIZED_FLOOD)",
+                 searchAlgorithmInt);
+    cmd.AddValue("disabled",
+                 "0 for disabled nodes, 1 for enabled nodes. Default is 0",
+                 isDisabledNodeInt);
+    cmd.Parse(argc, argv);
+
+    if (searchAlgorithmInt == -1 || srcIndex == -1 || sinkIndex == -1 || networkTypeInt == -1 ||
+        (fileName.empty() && nodeNum == -1))
+    {
+        NS_LOG_ERROR("Please provide all the required parameters.");
+        return 1;
+    }
+
+    if ((searchAlgorithmInt == 1 || searchAlgorithmInt == 2) && walkers == -1)
+    {
+        NS_LOG_ERROR("Please provide a valid number of walkers.");
+        return 1;
+    }
+
+    bool isDisabledNode = isDisabledNodeInt == 1 ? true : false;
+
+    // Convert int to enum
+    NetworkType networkType = static_cast<NetworkType>(networkTypeInt);
+    SearchAlgorithm searchAlgorithm = static_cast<SearchAlgorithm>(searchAlgorithmInt);
+
+    // Build the network
+    P2PNetwork net = CreateP2PNetwork(networkType, nodeNum, fileName);
+    // reassign
+    nodeNum = net.nodes.GetN();
+
+    std::vector<int> disabledNodes;
+    // get disabled nodes
+    if (networkType != TREE)
+    {
+        disabledNodes = P2PUtil::readDisabledNodeFile(fileName);
+    }
+    int disabledNodePointer = 0;
+
+    // Install the P2PApplication for each node
+    for (uint32_t i = 0; i < net.nodes.GetN(); ++i)
+    {
+        Ptr<P2PApplication> app = CreateObject<P2PApplication>();
+        net.nodes.Get(i)->AddApplication(app);
+        app->SetStartTime(Seconds(1.0));
+        app->SetStopTime(Seconds(20.0)); // adjust runtime
+        app->SetAddresses();
+        app->SetPeers(net.nodeNeighbors[i]);
+
+        // set disabled nodes
+        if (isDisabledNode && i == disabledNodes[disabledNodePointer])
+        {
+            app->SetDisableNode(true);
+            disabledNodePointer++;
+        }
+        // logger
+        // Simulator::Schedule(Seconds(1.1), &P2PApplication::LogNodeInfo, app);
+    }
+
+    // DEBUGGING -> to show all underlying ipv4 protocol logs (helps to see if packet being dropped)
+    // LogComponentEnable("Ipv4L3Protocol", LOG_LEVEL_ALL);
+
+    // Simulation runner
+    auto app = DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(0));
+    if (app)
+    {
+        NS_LOG_INFO("\nStarting P2P simulation...\n");
+        Simulator::Schedule(Seconds(5),
+                            &P2PApplication::ScheduleSearchWithRetry,
+                            app,
+                            searchAlgorithm,
+                            sinkIndex,
+                            ttl,
+                            walkers);
+    }
+
+    // Generate file names for output
+    FILENAMES fileNames =
+        P2PUtil::generateFileName(algorithmFolder, searchAlgorithmInt, isDisabledNode);
+
+    // this generates warnings but if it's not tree (file) then the animation is not correct
+    MobilityHelper mobility;
+    mobility.SetPositionAllocator("ns3::RandomRectanglePositionAllocator",
+                                  "X",
+                                  StringValue("ns3::UniformRandomVariable[Min=0.0|Max=100.0]"),
+                                  "Y",
+                                  StringValue("ns3::UniformRandomVariable[Min=0.0|Max=100.0]"));
+    mobility.SetMobilityModel("ns3::ConstantPositionMobilityModel");
+    mobility.InstallAll();
+
+    AnimationInterface anim(fileNames.netAnim);
+
+    anim.UpdateNodeDescription(srcIndex, "Src");
+    anim.UpdateNodeColor(srcIndex, 0, 0, 255);
+    anim.UpdateNodeDescription(sinkIndex, "Sink");
+    anim.UpdateNodeColor(sinkIndex, 0, 0, 255);
+
+    // determine graph type for NetAnim positioning
+    std::regex clusterPattern(".*cluster.*", std::regex_constants::icase);
+    std::regex megaGraphPattern(".*megagraph.*", std::regex_constants::icase);
+
+    if (networkType == TREE)
+    {
+        P2PUtil::PositionTreeNodes(0, 45.5, 10.0, 20, 15, anim, net.nodes);
+    }
+    if (std::regex_match(fileName, clusterPattern) || std::regex_match(fileName, megaGraphPattern))
+    {
+        P2PUtil::PositionClusterNodes(0, 50.0, 50.0, 30.0, 10.0, anim, net.nodes);
+    }
+
+    Simulator::Run();
+
+    NS_LOG_INFO("\nSimulation Statistics:");
+    NS_LOG_INFO("----------------------");
+
+    // stats. set nodes
+    DynamicCast<P2PApplication>(net.nodes.Get(srcIndex)->GetApplication(0))->SetSrcNode();
+    DynamicCast<P2PApplication>(net.nodes.Get(sinkIndex)->GetApplication(0))->SetSinkNode();
+
+    P2PUtil::saveStatsAsCSV(net.nodes, fileNames);
+
+    Simulator::Destroy();
+
+    return 0;
+}
