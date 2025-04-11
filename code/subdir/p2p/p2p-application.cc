@@ -27,7 +27,7 @@
 #include "ns3/ipv4-static-routing.h"
 
 // global variables
-#define MAX_RETRIES 5
+#define MAX_RETRIES 4
 #define QUERY_TIMEOUT 2
 #define DEFALT_PORT 5000
 
@@ -156,6 +156,9 @@ P2PApplication::ScheduleSearchWithRetry(SearchAlgorithm searchAlgorithm,
     // Schedule retry check in 2 seconds
     m_retryEvent =
         Simulator::Schedule(Seconds(QUERY_TIMEOUT), &P2PApplication::CheckAndRetrySearch, this);
+
+    // stats
+    stats.IncrementTriedRequests();
 }
 
 void
@@ -167,16 +170,17 @@ P2PApplication::CheckAndRetrySearch()
         Simulator::Cancel(m_retryEvent);
         return;
     }
-    // current retry will also act as message Id
-    m_currentRetry++;
-    // stats
-    stats.IncrementTriedRequests();
 
     if (m_currentRetry >= MAX_RETRIES)
     {
         NS_LOG_INFO("Max retries reached. No query hit detected.");
         return;
     }
+
+    // current retry will also act as message Id
+    m_currentRetry++;
+    // stats
+    stats.IncrementTriedRequests();
 
     m_currentTtl += m_ttlIncrease; // Increase TTL for the next retry. Set to 5 right now, but can
                                    // be changed to be more dynamic
