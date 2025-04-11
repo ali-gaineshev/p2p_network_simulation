@@ -21,7 +21,7 @@ TTL increases by 1
 Flood:
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=3_regular_10_nodes/flood --ttl=1"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=0 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes/3_regular_with_10_nodes.txt --srcIndex=0 --sinkIndex=9 --ttl=1 --ttl_increase=1 --outputFolder=3_regular_10_nodes/flood"
 ```
 
 ---
@@ -31,7 +31,7 @@ Random Walk:
 walkers - 2
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=3_regular_10_nodes/random_walk --ttl=1 --walkers=2"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=1 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --ttl=1 --ttl_increase=1 --walkers=2 --outputFolder=3_regular_10_nodes/random_walk"
 ```
 
 ---
@@ -41,7 +41,7 @@ Normalized Flood:
 walkers - 2
 
 ```
-./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --outputFolder=3_regular_10_nodes/normalized_flood --ttl=1 --walkers=2"
+./ns3 build && ./ns3 run "scratch/code/network-sim.cc --searchAlg=2 --networkType=3 --fileName=scratch/code/graphs/3_regular_with_10_nodes/3_regular_with_10_nodes.txt  --srcIndex=0 --sinkIndex=9 --ttl=1 --ttl_increase=1 --walkers=2 --outputFolder=3_regular_10_nodes/normalized_flood"
 ```
 
 ---

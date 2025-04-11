@@ -27,7 +27,6 @@
 #include "ns3/ipv4-static-routing.h"
 
 // global variables
-#define TTL_INCREMENT 5
 #define MAX_RETRIES 5
 #define QUERY_TIMEOUT 2
 #define DEFALT_PORT 5000
@@ -179,7 +178,7 @@ P2PApplication::CheckAndRetrySearch()
         return;
     }
 
-    m_currentTtl += TTL_INCREMENT; // Increase TTL for the next retry. Set to 5 right now, but can
+    m_currentTtl += m_ttlIncrease; // Increase TTL for the next retry. Set to 5 right now, but can
                                    // be changed to be more dynamic
 
     NS_LOG_INFO("Retry #" << m_currentRetry << " with TTL=" << std::to_string(m_currentTtl));
@@ -841,6 +840,12 @@ P2PApplication::SetAddresses()
     }
     // DEBUG
     // PrintAddresses();
+}
+
+void
+P2PApplication::SetTTLIncrease(uint32_t ttlIncrease)
+{
+    m_ttlIncrease = ttlIncrease;
 }
 
 // ----------------------------------------------------------------------------
