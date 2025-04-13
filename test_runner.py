@@ -2,13 +2,14 @@ import subprocess
 import sys
 import os
 
+CMAKE_WARNING = "export CMAKE_SUPPRESS_DEV_WARNINGS=1; "
 TESTFILE = 'TESTING_SPECIFICS.md'
 NS3 = "../ns3"
+DISABLE_NODES = ' --disabled=1"'
 
 
 def main():
     num_tests = int(sys.argv[1])
-
     commands = read_testing_file()
 
     cwd = os.getcwd().replace("/scratch", "")
@@ -17,9 +18,13 @@ def main():
     open('app.log', 'w').close()
 
     for command in commands:
-        command = "export CMAKE_SUPPRESS_DEV_WARNINGS=1; " + command
+        command: str = CMAKE_WARNING + command
+        disabled_nodes_command = command[:-1] + DISABLE_NODES
         for n in range(num_tests):
             run_command(command, cwd)
+
+            # run disabled nodes too
+            run_command(disabled_nodes_command, cwd)
 
 
 def run_command(command, cwd):

@@ -112,7 +112,7 @@ main(int argc, char* argv[])
         app->SetPeers(net.nodeNeighbors[i]);
 
         // set disabled nodes
-        if (isDisabledNode && i == disabledNodes[disabledNodePointer])
+        if (networkType != TREE && isDisabledNode && i == disabledNodes[disabledNodePointer])
         {
             app->SetDisableNode(true);
             disabledNodePointer++;

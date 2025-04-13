@@ -4,49 +4,55 @@ import numpy as np
 import os
 from node import *
 
-folders = ['flood', 'random_walk', 'normalized_flood']
-
+ALGS = ['flood', 'random_walk', 'normalized_flood']
+TYPES = ['all', 'disabled']
 stat_folder = 'test_results/'
 
 
 def main():
     directories = os.listdir(os.getcwd())
 
-    # for each topology
-    for d in directories:
-        if os.path.isdir(d):
-            print(f"Directory: {d}")
-            subfolders = os.listdir(d)
+    # for disabled and not disabled types
+    for network_type in directories:
+        if os.path.isdir(network_type) and network_type in TYPES:
+            print(f"Directory: {network_type}")
+            topologies = os.listdir(network_type)
 
-            # for each algorithm
-            for alg in folders:
-                tests: list[Test] = []
-                if alg in subfolders:
-                    print(f"  Folder: {alg}")
-                    cur_path = os.path.join(d, alg)
-                    files = os.listdir(cur_path)
-                    pairs = find_pair_files(files)
+            # for each topology
+            for topology in topologies:
+                print(f"    Topology: {topology}")
+                topology_path = os.path.join(network_type, topology)
+                algs = os.listdir(topology_path)
+                # for each algorithm
+                for alg in algs:
 
-                    # for each pair of files
-                    for pair in pairs:
-                        print(f"    Pair: {pair}")
-                        # read the files
-                        nodes = read_file_pair(cur_path, pair)
+                    tests: list[Test] = []
+                    if alg in ALGS:
+                        print(f"      Algorithm: {alg}")
+                        cur_path = os.path.join(topology_path, alg)
+                        files = os.listdir(cur_path)
+                        pairs = find_pair_files(files)
 
-                        # run the analysis
-                        test: Test = analyze_nodes(nodes)
-                        tests.append(test)
+                        # for each pair of files
+                        for pair in pairs:
+                            print(f"        Pair: {pair}")
+                            # read the files
+                            # nodes = read_file_pair(cur_path, pair)
 
-                        # write individual test to a file just in case
-                        write_test_to_file(
-                            test, os.path.join(d, stat_folder), pair[0])
+                        #     # run the analysis
+                        #     test: Test = analyze_nodes(nodes)
+                        #     tests.append(test)
 
-                    # average the tests
-                    combined_test = AllTestsAveraged(
-                        tests).calculate_averages()
-                    # write the tests
-                    write_test_to_file(
-                        combined_test, f"{d}", f"main_test_{alg}")
+                        #     # write individual test to a file just in case
+                        #     write_test_to_file(
+                        #         test, os.path.join(d, stat_folder), pair[0])
+
+                        # # average the tests
+                        # combined_test = AllTestsAveraged(
+                        #     tests).calculate_averages()
+                        # # write the tests
+                        # write_test_to_file(
+                        #     combined_test, f"{d}", f"main_test_{alg}")
 
 
 def analyze_nodes(nodes: list[SrcNode, SinkNode, list[IntermediateNode]]) -> Test:
@@ -156,7 +162,7 @@ def read_query_hits_df(query_hits_df: pd.DataFrame) -> list[QueryHit]:
     return queryHits
 
 
-def find_pair_files(files):
+def find_pair_files(files) -> list[tuple[str, str]]:
     pairs = []
 
     for file in files:
