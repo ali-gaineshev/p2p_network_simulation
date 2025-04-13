@@ -45,7 +45,7 @@ class P2PApplication : public Application
 
     // application functionality
     bool m_isDisabled = false;
-
+    uint32_t m_ttlIncrease;
     // statistics
     bool m_queryHit = false;
     P2PStats stats;
@@ -126,6 +126,7 @@ class P2PApplication : public Application
     void SetPeers(std::vector<Ipv4Address> neighbours);
     void SetAddresses();
     void SetDisableNode(bool m_isDisabled);
+    void SetTTLIncrease(uint32_t ttlIncrease);
 
     // GETTERS
     const bool GetQueryHit() const;

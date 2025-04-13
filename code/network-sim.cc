@@ -17,6 +17,7 @@
 #include <unordered_set>
 
 #define DEFAULT_TTL 5
+#define DEFAULT_TTL_INCREASE 5
 using namespace ns3;
 NS_LOG_COMPONENT_DEFINE("P2PNetworkSim");
 
@@ -40,6 +41,7 @@ main(int argc, char* argv[])
     int searchAlgorithmInt = -1;
     uint32_t walkers = -1;
     uint32_t ttl = DEFAULT_TTL;
+    uint32_t ttl_increase = DEFAULT_TTL_INCREASE;
     int isDisabledNodeInt = 0;
     // Pass cl args.
     CommandLine cmd;
@@ -57,6 +59,7 @@ main(int argc, char* argv[])
                  algorithmFolder);
     cmd.AddValue("walkers", "K-walkers in Random Walk or k in Normalized Flood ", walkers);
     cmd.AddValue("ttl", "Default TTL for the query. Default is 5", ttl);
+    cmd.AddValue("ttl_increase", "TTL increases by this number. Default is 5", ttl_increase);
     cmd.AddValue("searchAlg",
                  "Search Algorithm (0: FLOOD, 1: RANDOM_WALK, 2: NORMALIZED_FLOOD)",
                  searchAlgorithmInt);
@@ -105,10 +108,11 @@ main(int argc, char* argv[])
         app->SetStartTime(Seconds(1.0));
         app->SetStopTime(Seconds(20.0)); // adjust runtime
         app->SetAddresses();
+        app->SetTTLIncrease(ttl_increase);
         app->SetPeers(net.nodeNeighbors[i]);
 
         // set disabled nodes
-        if (isDisabledNode && i == disabledNodes[disabledNodePointer])
+        if (networkType != TREE && isDisabledNode && i == disabledNodes[disabledNodePointer])
         {
             app->SetDisableNode(true);
             disabledNodePointer++;
