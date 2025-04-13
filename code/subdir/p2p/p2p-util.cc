@@ -9,6 +9,7 @@
 #include <iomanip>
 #include <iostream>
 #include <math.h>
+#include <random>
 #include <sstream>
 #include <unistd.h>
 #include <vector>
@@ -41,18 +42,26 @@ P2PUtil::generateFileName(std::string algorithmFolder, int searchAlgorithmInt, b
         algorithm = "n_flood";
     }
 
+    // generate timestamp
     std::time_t now = std::time(nullptr);
     std::tm tm = *std::localtime(&now);
     std::ostringstream oss;
     oss << std::put_time(&tm, "%H%M%S");
     std::string timestamp = oss.str();
 
+    // generate random number
+    std::random_device rd;
+    std::mt19937 gen(rd());
+    std::uniform_int_distribution<> dist(100, 999);
+    std::string random_3digit = std::to_string(dist(gen));
+
+    // generate file names
     FILENAMES filenames = {NS3_FOLDER + statGraphType + algorithmFolder + "/" + algorithm + "_" +
-                               timestamp + ".csv",
+                               timestamp + "_" + random_3digit + ".csv",
                            NS3_FOLDER + statGraphType + algorithmFolder + "/" + algorithm +
-                               "_queryhits_" + timestamp + ".csv",
+                               "_queryhits_" + timestamp + "_" + random_3digit + ".csv",
                            NS3_FOLDER + statGraphType + algorithmFolder + "/" + algorithm +
-                               "_netanim_" + timestamp + ".xml"};
+                               "_netanim_" + timestamp + "_" + random_3digit + ".xml"};
     return filenames;
 }
 

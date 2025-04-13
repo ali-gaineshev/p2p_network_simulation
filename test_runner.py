@@ -1,6 +1,7 @@
 import subprocess
 import sys
 import os
+import time
 
 CMAKE_WARNING = "export CMAKE_SUPPRESS_DEV_WARNINGS=1; "
 TESTFILE = 'TESTING_SPECIFICS.md'
@@ -20,11 +21,13 @@ def main():
     for command in commands:
         command: str = CMAKE_WARNING + command
         disabled_nodes_command = command[:-1] + DISABLE_NODES
-        for n in range(num_tests):
+        for _ in range(num_tests):
             run_command(command, cwd)
 
             # run disabled nodes too
             run_command(disabled_nodes_command, cwd)
+
+            time.sleep(0.5)  # file names are dependendat on time
 
 
 def run_command(command, cwd):
