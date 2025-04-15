@@ -5,6 +5,10 @@ import os
 from node import *
 
 ALGS = ['flood', 'random_walk', 'normalized_flood']
+TOPOLOGIES = ['3_regular_10_nodes', '3_regular_20_nodes', '3_regular_30_nodes',
+              '3_regular_40_nodes', '3_regular_50_nodes', '4_regular_200_nodes',
+              '5_regular_200_nodes', 'cluster_6_with_4_nodes_each', 'megagraph_3_clusters',
+              'megagraph_5_clusters', 'tree_with_80_nodes']
 TYPES = ['all', 'disabled']
 stat_folder = 'test_results/'
 
@@ -20,169 +24,131 @@ def main():
 
             # for each topology
             for topology in topologies:
+                if topology not in TOPOLOGIES:
+                    continue
+
                 print(f"    Topology: {topology}")
                 topology_path = os.path.join(network_type, topology)
                 algs = os.listdir(topology_path)
                 # for each algorithm
                 for alg in algs:
+                    if alg not in ALGS:
+                        continue
 
                     tests: list[Test] = []
-                    if alg in ALGS:
-                        print(f"      Algorithm: {alg}")
-                        cur_path = os.path.join(topology_path, alg)
-                        files = os.listdir(cur_path)
-                        pairs = find_pair_files(files)
+                    print(f"      Algorithm: {alg}")
+                    cur_path = os.path.join(topology_path, alg)
+                    files = os.listdir(cur_path)
+                    pairs = find_pair_files(files)
 
-                        # for each pair of files
-                        for pair in pairs:
-                            print(f"        Pair: {pair}")
-                            # read the files
-                            nodes = read_file_pair(cur_path, pair)
+                    # test object for each pair
+                    int_node_tests = IntermediateNodeTests()
+                    src_node_tests = SrcNodeTests()
+                    avg_query_hits_tests = AvgQueryHitsTests()
+                    raw_query_hits_tests = RawQueryHitsTests()
 
-                        #     # run the analysis
-                        #     test: Test = analyze_nodes(nodes)
-                        #     tests.append(test)
+                    # for each pair of files
+                    for pair in pairs:
+                        # print(f"        Pair: {pair}")
+                        # read the files and get data
+                        src_node, int_nodes, query_hits_df, per_avg_qh_stats = read_file_pair(
+                            cur_path, pair
+                        )
 
-                        #     # write individual test to a file just in case
-                        #     write_test_to_file(
-                        #         test, os.path.join(d, stat_folder), pair[0])
+                        int_node_tests.append_row(int_nodes)
+                        src_node_tests.append_row(src_node)
+                        avg_query_hits_tests.append_row(per_avg_qh_stats)
+                        raw_query_hits_tests.append_row(query_hits_df)
 
-                        # # average the tests
-                        # combined_test = AllTestsAveraged(
-                        #     tests).calculate_averages()
-                        # # write the tests
-                        # write_test_to_file(
-                        #     combined_test, f"{d}", f"main_test_{alg}")
-                            break  # temp
-                    break  # temp
-                break  # temp
+                    # calculate combined stats
+                    local_test_for_int_nodes = int_node_tests.calculate_stats()
+                    local_test_for_src_nodes = src_node_tests.calculate_stats()
+                    local_test_for_avg_qh = avg_query_hits_tests.calculate_stats()
+                    local_test_for_raw_qh = raw_query_hits_tests.calculate_stats()
 
-            break  # temp
-
-
-# def analyze_nodes(nodes: list[SrcNode, SinkNode, list[IntermediateNode]]) -> Test:
-#     intermediate_nodes: list[IntermediateNode] = nodes[2]
-#     intermediate_node_tests = analyze_intermediate_nodes(intermediate_nodes)
-
-#     src_node: SrcNode = nodes[0]
-#     src_node_tests, query_hit_tests = analyze_src_node(src_node)
-
-#     sink_node: SinkNode = nodes[1]
-#     sink_node_tests = analyze_sink_node(sink_node)
-
-#     return Test(src_node_tests, sink_node_tests, intermediate_node_tests, query_hit_tests)
+                    test = Test(local_test_for_src_nodes, local_test_for_avg_qh,
+                                local_test_for_raw_qh, local_test_for_int_nodes)
+                    test.write_to_txt_file(
+                        topology_path, f"{alg}_test_results.md", alg)
 
 
-# def analyze_src_node(srcNode: SrcNode) -> Test.SrcNode_Per_Test_Average:
-#     # analyze query hits
-#     avg_hops, avg_latency = srcNode.analyze_query_hits()
-
-#     return (
-#         Test.SrcNode_Per_Test_Average(
-#             srcNode.initial_requests, srcNode.tried_requests, srcNode.query_hits
-#         ),
-#         Test.QueryHit_Per_Test_Average(avg_hops, avg_latency)
-#     )
+# READING MAIN CSV FILES AND CONVERTING THEM TO DATAFRAMES
 
 
-# # this will be useful for dynamic nodes
-# def analyze_sink_node(sinkNode: SinkNode) -> Test.SinkNode_Per_Test_Average:
-#     return Test.SinkNode_Per_Test_Average(
-#         sinkNode.received_requests
-#     )
-
-
-# def analyze_intermediate_nodes(intermediateNodes: list[IntermediateNode]) -> Test.IntermediateNode_Per_Test_Average:
-#     n = len(intermediateNodes)
-#     sum_sent = 0
-#     sum_received = 0
-#     sum_forwarded = 0
-#     sum_wasted_requests = 0
-#     sum_efficiency = 0
-#     for node in intermediateNodes:
-#         sum_sent += node.sent_requests
-#         sum_received += node.received_requests
-#         sum_forwarded += node.forwarded_hits
-#         sum_wasted_requests += node.wasted_requests()
-#         sum_efficiency += node.efficiency()
-
-#     avg_sent = round(sum_sent / n, 1)
-#     avg_received = round(sum_received / n, 1)
-#     avg_forwarded = round(sum_forwarded / n, 1)
-#     avg_wasted_requests = round(sum_wasted_requests / n, 1)
-#     avg_efficiency = round(sum_efficiency / n, 1)
-
-#     return Test.IntermediateNode_Per_Test_Average(
-#         avg_wasted_requests,
-#         avg_efficiency,
-#         avg_sent,
-#         avg_received,
-#         avg_forwarded
-#     )
-
-
-def read_file_pair(path, pair) -> list[SrcNode, SinkNode, list[IntermediateNode]]:
+def read_file_pair(path, pair):
     # get file
     main_file, query_hits_file = pair
     main_file = os.path.join(path, main_file)
     query_hits_file = os.path.join(path, query_hits_file)
 
-    # read the files
+    # read main csv files
     main_df = pd.read_csv(main_file)
-    read_main_df(main_df)
-    # query_hits_df = pd.read_csv(query_hits_file)
+    src_node, int_nodes = read_main_df(main_df)
+    # read query hits csv files
+    query_hits_df = pd.read_csv(query_hits_file)
+    per_avg_qh_stats, query_hits_df = read_query_hits_df(query_hits_df)
 
-    # # get df data
-    # nodes = read_main_df(main_df)
-    # queryHits = read_query_hits_df(query_hits_df)
-
-    # nodes[0].setQueryHitList(queryHits)
-
-    # return nodes
+    return src_node, int_nodes, query_hits_df, per_avg_qh_stats
 
 
 def read_main_df(main_df: pd.DataFrame):
-    # sort nodes
-    src_node = main_df[main_df['IsSource'] == 1].iloc[0].copy()
-    sink_node = main_df[main_df['IsSink'] == 1].iloc[0].copy()
+
+    # intermediate nodes
     i_nodes = main_df[(
         main_df['IsSource'] == 0) & (main_df['IsSink'] == 0)].copy()
-
+    # calculate new columns
     i_nodes = calculate_wasted_requests(i_nodes)
+    i_nodes = calculate_efficiency(i_nodes)
+    i_nodes = calculate_zero_work_done_in_nodes(i_nodes)
 
-    print(src_node.describe())
-    print("--------------")
-    print(sink_node.describe())
-    print("--------------")
-    print(i_nodes.describe())
+    # Compute summary statistics
+    int_nodes_summary_data = {
+        'TotalNodes': [len(i_nodes)],
+        'MeanReceivedRequests': [i_nodes['ReceivedRequests'].mean()],
+        'MeanSentRequests': [i_nodes['SentRequests'].mean()],
+        'MeanForwardedQueryHits': [i_nodes['ForwardedQueryHits'].mean()],
+        'MeanWastedRequests': [i_nodes['WastedRequests'].mean()],
+        'MeanQueryHitEfficiency': [i_nodes['Efficiency'].mean()],
+        'CountDisabledNodes': [i_nodes['IsDisabled'].sum()],
+        'CountZeroWorkDone': [i_nodes['NoWorkDone'].sum() - i_nodes['IsDisabled'].sum()],
+        'TotalMessages': [i_nodes['SentRequests'].sum() + i_nodes['ForwardedQueryHits'].sum() + i_nodes['ReceivedRequests'].sum()],
+    }
+    int_nodes_summary_df = pd.DataFrame(int_nodes_summary_data)
 
-    mean_received_req = i_nodes['ReceivedRequests'].mean()
-    mean_sent_req = i_nodes['SentRequests'].mean()
-    mean_fquery_hits = i_nodes['ForwardedQueryHits'].mean()
-    mean_wasted_requests = i_nodes['WastedRequests'].mean()
+    int_nodes_total_messages = int_nodes_summary_df['TotalMessages'][0]
+    # src node
+    src_node = main_df[main_df['IsSource'] == 1].iloc[0].copy().to_frame().T
+    src_node = src_node.drop(columns=[
+        'NodeID', 'IsSink', 'IsSource', 'IsDisabled', 'SentRequests', 'ForwardedQueryHits', 'ReceivedRequests'
+    ])
+    src_node['SuccessRate'] = (
+        src_node['UniqueQueryHits'] / src_node['InitializedRequests']) * 100
+    src_node['RedundantQueryHits'] = src_node.apply(
+        lambda row: 0 if row['UniqueQueryHits'] == 0 else (
+            (row['QueryHits'] - row['UniqueQueryHits']) / row['UniqueQueryHits']) * 100,
+        axis=1
+    )
+    src_node = src_node.rename(columns={'TriedRequests': 'TotalRetries'})
+    if src_node['UniqueQueryHits'].iloc[0] > 0:
+        src_node['OverheadPerQueryHit'] = int_nodes_total_messages / \
+            src_node['UniqueQueryHits'].iloc[0]
+    else:
+        src_node['OverheadPerQueryHit'] = float('nan')
 
-    print(f"Mean Received Requests: {mean_received_req}")
-    print(f"Mean Sent Requests: {mean_sent_req}")
-    print(f"Mean Forwarded Query Hits: {mean_fquery_hits}")
-    print(f"Mean Wasted Requests: {mean_wasted_requests}")
-    # srcNode = SrcNode(src_node['NodeID'], src_node['TriedRequests'],
-    #                   src_node['InitializedRequests'], src_node['QueryHits'])
-    # sinkNode = SinkNode(sink_node['NodeID'], sink_node['ReceivedRequests'])
-    # intermediateNodes = []
-    # for _, row in intermediate_nodes.iterrows():
-    #     intermediateNodes.append(IntermediateNode(
-    #         row['NodeID'], row['ReceivedRequests'], row['SentRequests'], row['ForwardedQueryHits']))
-
-    # return [srcNode, sinkNode, intermediateNodes]
+    return src_node, int_nodes_summary_df
 
 
-def read_query_hits_df(query_hits_df: pd.DataFrame) -> list[QueryHit]:
-    queryHits = []
-    for _, row in query_hits_df.iterrows():
-        queryHits.append(
-            QueryHit(row['QueryHitId'], row[' Hops'], row[' Seconds']))
+def read_query_hits_df(query_hits_df: pd.DataFrame):
+    per_average_stats = pd.DataFrame({
+        'AvgHops': [query_hits_df['Hops'].mean()],
+        'AvgLatency': [query_hits_df['Seconds'].mean()],
+    })
+    # keep raw data to combine with others later
+    query_hits_df.drop(columns=['QueryHitId'], inplace=True)
 
-    return queryHits
+    return per_average_stats, query_hits_df
+
+# READING AND WRITING FUNCTIONS
 
 
 def find_pair_files(files) -> list[tuple[str, str]]:
@@ -192,31 +158,55 @@ def find_pair_files(files) -> list[tuple[str, str]]:
         # remove the extension
         base = file.split('.')[0]
 
-    # ccheck if it's a main file or query hits file
-    if '_queryhits_' in base:
-        # found query hit then main file is the same name
-        main_file = base.replace('_queryhits_', '_') + '.csv'
-    if main_file in files:
-        pairs.append((main_file, file))
+        # ccheck if it's a main file or query hits file
+        if '_queryhits_' in base:
+            # found query hit then main file is the same name
+            main_file = base.replace('_queryhits_', '_') + '.csv'
+            if main_file in files:
+                pairs.append((main_file, file))
 
-        return pairs
+    return pairs
+
+
+# UTILITY FUNCTIONS
 
 
 def calculate_wasted_requests(df):
-    # Vectorized calculation with proper zero-division handling
     mask = df['ReceivedRequests'] > 0
-    df['WastedRequests'] = 0  # Default value
-    df.loc[mask, 'WastedRequests'] = (
-        (df['SentRequests'] - df['ForwardedQueryHits']) /
-        df['ReceivedRequests']
-    )[mask]
+    df['WastedRequests'] = 0.0  # Default value
+
+    # calc the value only when ReceivedRequests > 0 AND ForwardedQueryHits <= SentRequests
+    calc_mask = mask & (df['ForwardedQueryHits'] <= df['SentRequests'])
+    df.loc[calc_mask, 'WastedRequests'] = (
+        ((df['SentRequests'] - df['ForwardedQueryHits']) /
+         df['ReceivedRequests']) * 100
+    )[calc_mask]
+
+    # set to 0 otherwise
+    df.loc[mask & (df['ForwardedQueryHits'] > df['SentRequests']),
+           'WastedRequests'] = 0
+
     return df
 
 
-def write_test_to_file(test: Test, cur_path: str, filename: str):
-    # write the test to a local file
-    with open(f'{cur_path}/{filename}.txt', 'w') as f:
-        f.write(str(test))
+def calculate_efficiency(df):
+    mask = df['SentRequests'] > 0
+    df['Efficiency'] = 0.0  # Default value
+    df.loc[mask, 'Efficiency'] = (
+        (df['ForwardedQueryHits'] / df['SentRequests']) * 100
+    )[mask]
+
+    return df
+
+
+def calculate_zero_work_done_in_nodes(df):
+    df['NoWorkDone'] = (
+        (df['ReceivedRequests'] == 0) &
+        (df['SentRequests'] == 0) &
+        (df['ForwardedQueryHits'] == 0)
+    )
+
+    return df
 
 
 main()

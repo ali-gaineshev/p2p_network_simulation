@@ -71,7 +71,18 @@ CreateRegularGraph(std::string fileName)
     // Point-to-Point helper for connections
     PointToPointHelper p2p;
     p2p.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
-    p2p.SetChannelAttribute("Delay", StringValue("2ms"));
+
+    // set random seed
+    SeedManager seedManager;
+    SeedManager::SetSeed(time(NULL));
+    SeedManager::SetRun(0);
+
+    // generate random variable
+    Ptr<UniformRandomVariable> delay = CreateObject<UniformRandomVariable>();
+    std::string delayString = std::to_string(delay->GetValue(1.5, 2.5)) + "ms";
+
+    // Install the RandomDelay model to the channel
+    p2p.SetChannelAttribute("Delay", StringValue(delayString));
 
     // IPv4 address helper
     Ipv4AddressHelper address;
@@ -159,7 +170,18 @@ CreateLinearNetwork(uint32_t numNodes)
     // Point-to-Point helper for connections
     PointToPointHelper p2p;
     p2p.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
-    p2p.SetChannelAttribute("Delay", StringValue("2ms"));
+
+    // set random seed
+    SeedManager seedManager;
+    SeedManager::SetSeed(time(NULL));
+    SeedManager::SetRun(0);
+
+    // generate random variable
+    Ptr<UniformRandomVariable> delay = CreateObject<UniformRandomVariable>();
+    std::string delayString = std::to_string(delay->GetValue(1.5, 2.5)) + "ms";
+
+    // Install the RandomDelay model to the channel
+    p2p.SetChannelAttribute("Delay", StringValue(delayString));
 
     // IPv4 address helper
     Ipv4AddressHelper address;
@@ -212,7 +234,18 @@ CreateTreeNetwork(uint32_t numNodes)
     // setting up wired point-to-point connections between each
     PointToPointHelper p2p;
     p2p.SetDeviceAttribute("DataRate", StringValue("5Mbps"));
-    p2p.SetChannelAttribute("Delay", StringValue("2ms"));
+
+    // set random seed
+    SeedManager seedManager;
+    SeedManager::SetSeed(time(NULL));
+    SeedManager::SetRun(0);
+
+    // generate random variable
+    Ptr<UniformRandomVariable> delay = CreateObject<UniformRandomVariable>();
+    std::string delayString = std::to_string(delay->GetValue(1.5, 2.5)) + "ms";
+
+    // Install the RandomDelay model to the channel
+    p2p.SetChannelAttribute("Delay", StringValue(delayString));
 
     // creating the peers
     NodeContainer allNodes;
