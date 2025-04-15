@@ -8,58 +8,58 @@
 
 	Average Unique Query Hits: 0.60
 
-	Average Total Retries: 3.85
+	Average Total Retries: 3.55
 
-	Average Initialized Requests: 7.70
+	Average Initialized Requests: 7.10
 
-	Average Success Rate (Unique Query Hits / Initialized Requests): 11 %
+	Average Success Rate (Unique Query Hits / Initialized Requests): 15 %
 
 	Average Redundant Query Hits (Unique Query Hits - Query Hits): 0 %
 
-	Average Overhead Per Query Hit (Total Messages / Unique Query Hit): 46
+	Average Overhead Per Query Hit (Total Messages / Unique Query Hit): 42
 
 
 
 ## Average Query Hits Test Results:
-<pre><code>Average Hops: 4.75
+<pre><code>Average Hops: 4.92
 
 Min Hops: 4.00
 
-Max Hops: 6.00
+Max Hops: 8.00
 
-Median Hops: 5.00
+Median Hops: 4.50
 
-Standard Deviation of Hops: 0.75
+Standard Deviation of Hops: 1.24
 
 
-Average Latency: 2.2 × 10<sup>-02</sup>
+Average Latency: 2.6 × 10<sup>-02</sup>
 
-Max Latency: 2.8 × 10<sup>-02</sup>
+Max Latency: 4.1 × 10<sup>-02</sup>
 
-Min Latency: 1.7 × 10<sup>-02</sup>
+Min Latency: 2.0 × 10<sup>-02</sup>
 
-Median Latency: 2.3 × 10<sup>-02</sup>
+Median Latency: 2.4 × 10<sup>-02</sup>
 
-Standard Deviation of Latency: 3.3 × 10<sup>-03</sup>
+Standard Deviation of Latency: 6.1 × 10<sup>-03</sup>
 
 </code></pre>
 
 ---------------------------------------------
 ## Intermediate Nodes Test Results:
 
-	Average Total Work (Sent + Received + Forwarded QH): 49
+	Average Total Work (Sent + Received + Forwarded QH): 47
 
-	Average Wasted Requests ((Sent - Forwarded QH) / Received): 41%
+	Average Wasted Requests ((Sent - Forwarded QH) / Received): 39%
 
-	Average Query Hit Efficiency (Forwarded QH / Received): 11%
+	Average Query Hit Efficiency (Forwarded QH / Received): 13%
 
-	Average Count of Zero Work Done Nodes (No Sent, Received, Forwarded QH): 4.10
+	Average Count of Zero Work Done Nodes (No Sent, Received, Forwarded QH): 4.20
 
-	Average Sent Requests: 1.20
+	Average Sent Requests: 1.14
 
 	Average Forwarded Query Hits: 0.16
 
-	Average Received Requests: 1.38
+	Average Received Requests: 1.32
 
 	Average Count of Disabled Nodes: 4.00
 
