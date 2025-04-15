@@ -35,14 +35,15 @@ class Test:
             f'</code></pre>\n'
         )
 
-    def write_to_txt_file(self, path, filename):
+    def write_to_txt_file(self, path, filename, alg):
         with open(f"{path}/{filename}", "w") as file:
-            file.write("# Source Nodes Test Results:\n")
+            file.write(f"# {path} --- {alg}\n")
+            file.write("## Source Nodes Test Results:\n")
             file.write(str(self.test_for_src_nodes))
-            file.write("\n\n# Average Query Hits Test Results:\n")
+            file.write("\n\n## Average Query Hits Test Results:\n")
             file.write(str(self.combine_qh_tests_to_str()))
             file.write("\n---------------------------------------------\n")
-            file.write("# Intermediate Nodes Test Results:\n\n")
+            file.write("## Intermediate Nodes Test Results:\n\n")
             file.write(str(self.test_for_int_nodes))
 
     class Test_For_IntermediateNodes:

@@ -5,6 +5,10 @@ import os
 from node import *
 
 ALGS = ['flood', 'random_walk', 'normalized_flood']
+TOPOLOGIES = ['3_regular_10_nodes', '3_regular_20_nodes', '3_regular_30_nodes',
+              '3_regular_40_nodes', '3_regular_50_nodes', '4_regular_200_nodes',
+              '5_regular_200_nodes', 'cluster_6_with_4_nodes_each', 'megagraph_3_clusters',
+              'megagraph_5_clusters', 'tree_with_80_nodes']
 TYPES = ['all', 'disabled']
 stat_folder = 'test_results/'
 
@@ -20,72 +24,52 @@ def main():
 
             # for each topology
             for topology in topologies:
+                if topology not in TOPOLOGIES:
+                    continue
+
                 print(f"    Topology: {topology}")
                 topology_path = os.path.join(network_type, topology)
                 algs = os.listdir(topology_path)
                 # for each algorithm
                 for alg in algs:
+                    if alg not in ALGS:
+                        continue
 
                     tests: list[Test] = []
-                    if alg in ALGS:
-                        print(f"      Algorithm: {alg}")
-                        cur_path = os.path.join(topology_path, alg)
-                        files = os.listdir(cur_path)
-                        pairs = find_pair_files(files)
+                    print(f"      Algorithm: {alg}")
+                    cur_path = os.path.join(topology_path, alg)
+                    files = os.listdir(cur_path)
+                    pairs = find_pair_files(files)
 
-                        # test object for each pair
-                        int_node_tests = IntermediateNodeTests()
-                        src_node_tests = SrcNodeTests()
-                        avg_query_hits_tests = AvgQueryHitsTests()
-                        raw_query_hits_tests = RawQueryHitsTests()
+                    # test object for each pair
+                    int_node_tests = IntermediateNodeTests()
+                    src_node_tests = SrcNodeTests()
+                    avg_query_hits_tests = AvgQueryHitsTests()
+                    raw_query_hits_tests = RawQueryHitsTests()
 
-                        # for each pair of files
-                        for pair in pairs:
-                            print(f"        Pair: {pair}")
-                            # read the files and get data
-                            src_node, int_nodes, query_hits_df, per_avg_qh_stats = read_file_pair(
-                                cur_path, pair
-                            )
+                    # for each pair of files
+                    for pair in pairs:
+                        # print(f"        Pair: {pair}")
+                        # read the files and get data
+                        src_node, int_nodes, query_hits_df, per_avg_qh_stats = read_file_pair(
+                            cur_path, pair
+                        )
 
-                            int_node_tests.append_row(int_nodes)
-                            src_node_tests.append_row(src_node)
-                            avg_query_hits_tests.append_row(per_avg_qh_stats)
-                            raw_query_hits_tests.append_row(query_hits_df)
+                        int_node_tests.append_row(int_nodes)
+                        src_node_tests.append_row(src_node)
+                        avg_query_hits_tests.append_row(per_avg_qh_stats)
+                        raw_query_hits_tests.append_row(query_hits_df)
 
-                        print("----------------")
-                        print("Intermediate Nodes")
-                        print(int_node_tests.df)
-                        print("----------------")
-                        print("Source Node")
-                        print(src_node_tests.df)
-                        print("----------------")
-                        print("Average Query Hits")
-                        print(avg_query_hits_tests.df)
-                        print("----------------")
-                        print("Raw Query Hits")
-                        print(raw_query_hits_tests.df)
+                    # calculate combined stats
+                    local_test_for_int_nodes = int_node_tests.calculate_stats()
+                    local_test_for_src_nodes = src_node_tests.calculate_stats()
+                    local_test_for_avg_qh = avg_query_hits_tests.calculate_stats()
+                    local_test_for_raw_qh = raw_query_hits_tests.calculate_stats()
 
-                        # calculate combined stats
-                        local_test_for_int_nodes = int_node_tests.calculate_stats()
-                        local_test_for_src_nodes = src_node_tests.calculate_stats()
-                        local_test_for_avg_qh = avg_query_hits_tests.calculate_stats()
-                        local_test_for_raw_qh = raw_query_hits_tests.calculate_stats()
-                        print("\n\n")
-                        print(local_test_for_int_nodes)
-                        print("\n\n")
-                        print(local_test_for_src_nodes)
-                        print("\n\n")
-                        print(local_test_for_avg_qh)
-                        print("\n\n")
-                        print(local_test_for_raw_qh)
-                        test = Test(local_test_for_src_nodes, local_test_for_avg_qh,
-                                    local_test_for_raw_qh, local_test_for_int_nodes)
-                        test.write_to_txt_file(
-                            topology_path, f"{alg}_test_results.md")
-                    break  # temp
-                break  # temp
-
-            break  # temp
+                    test = Test(local_test_for_src_nodes, local_test_for_avg_qh,
+                                local_test_for_raw_qh, local_test_for_int_nodes)
+                    test.write_to_txt_file(
+                        topology_path, f"{alg}_test_results.md", alg)
 
 
 # READING MAIN CSV FILES AND CONVERTING THEM TO DATAFRAMES
@@ -116,6 +100,7 @@ def read_main_df(main_df: pd.DataFrame):
     i_nodes = calculate_wasted_requests(i_nodes)
     i_nodes = calculate_efficiency(i_nodes)
     i_nodes = calculate_zero_work_done_in_nodes(i_nodes)
+
     # Compute summary statistics
     int_nodes_summary_data = {
         'TotalNodes': [len(i_nodes)],
@@ -125,7 +110,7 @@ def read_main_df(main_df: pd.DataFrame):
         'MeanWastedRequests': [i_nodes['WastedRequests'].mean()],
         'MeanQueryHitEfficiency': [i_nodes['Efficiency'].mean()],
         'CountDisabledNodes': [i_nodes['IsDisabled'].sum()],
-        'CountZeroWorkDone': [i_nodes['IsAnyWorkDone'].sum() - i_nodes['IsDisabled'].sum()],
+        'CountZeroWorkDone': [i_nodes['NoWorkDone'].sum() - i_nodes['IsDisabled'].sum()],
         'TotalMessages': [i_nodes['SentRequests'].sum() + i_nodes['ForwardedQueryHits'].sum() + i_nodes['ReceivedRequests'].sum()],
     }
     int_nodes_summary_df = pd.DataFrame(int_nodes_summary_data)
@@ -206,7 +191,7 @@ def calculate_wasted_requests(df):
 
 def calculate_efficiency(df):
     mask = df['SentRequests'] > 0
-    df['Efficiency'] = 0  # Default value
+    df['Efficiency'] = 0.0  # Default value
     df.loc[mask, 'Efficiency'] = (
         (df['ForwardedQueryHits'] / df['SentRequests']) * 100
     )[mask]
@@ -215,7 +200,7 @@ def calculate_efficiency(df):
 
 
 def calculate_zero_work_done_in_nodes(df):
-    df['IsAnyWorkDone'] = ~(
+    df['NoWorkDone'] = (
         (df['ReceivedRequests'] == 0) &
         (df['SentRequests'] == 0) &
         (df['ForwardedQueryHits'] == 0)
