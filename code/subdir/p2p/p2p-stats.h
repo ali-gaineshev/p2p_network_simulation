@@ -22,6 +22,7 @@ class P2PStats
     void IncrementTriedRequests();
 
     void IncrementQueryHits();
+    void IncrementUniqueQueryHits();
     void AddHopsForQueryHit(int hops);
     void AddSecondsForQueryHit(double seconds);
 
@@ -31,6 +32,7 @@ class P2PStats
     std::vector<int> GetHopsForQueryHits() const;
     std::vector<double> GetSecondsForQueryHits() const;
     int GetQueryHits() const;
+    int GetUniqueQueryHits() const;
     int GetTriedRequests() const;
     int GetInitializedRequests() const;
     int GetReceivedRequests() const;
@@ -53,6 +55,7 @@ class P2PStats
 
     // query hits
     int n_queryHits;                         // number of query hits
+    int n_uniqueQueryHits;                   // number of unique query hits
     std::vector<int> hopsForQueryHits;       // hops for query hits
     std::vector<double> secondsForQueryHits; // seconds for query hits
 };

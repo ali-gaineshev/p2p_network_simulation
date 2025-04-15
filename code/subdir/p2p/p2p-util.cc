@@ -83,7 +83,7 @@ P2PUtil::saveStatsAsCSV(NodeContainer nodes, FILENAMES fileNames)
 
     // ----------- main csv file ----------------
     // Write CSV header
-    csvFile << "NodeID,IsSink,IsSource,IsDisabled,QueryHits,ReceivedRequests,"
+    csvFile << "NodeID,IsSink,IsSource,IsDisabled,QueryHits,UniqueQueryHits,ReceivedRequests,"
             << "SentRequests,ForwardedQueryHits,TriedRequests,"
             << "InitializedRequests\n";
 
@@ -102,8 +102,8 @@ P2PUtil::saveStatsAsCSV(NodeContainer nodes, FILENAMES fileNames)
         // Write basic node info
         csvFile << i << "," << (isSinkNode ? "1" : "0") << "," << (isSrcNode ? "1" : "0") << ","
                 << (isDisabled ? "1" : "0") << "," << app->GetQueryHits() << ","
-                << app->GetReceivedRequests() << "," << app->GetSentRequests() << ","
-                << app->GetForwardedQueryHits() << ",";
+                << app->GetUniqueQueryHits() << "," << app->GetReceivedRequests() << ","
+                << app->GetSentRequests() << "," << app->GetForwardedQueryHits() << ",";
 
         // Source-specific stats
         if (isSrcNode)

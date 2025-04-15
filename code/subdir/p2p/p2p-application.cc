@@ -576,6 +576,17 @@ P2PApplication::RecievePacket(Ptr<Socket> socket)
             stats.IncrementQueryHits();
             stats.AddHopsForQueryHit(static_cast<int>(p2pPacket.GetHops()));
             stats.AddSecondsForQueryHit(latency);
+
+            // check for unique query hit
+            if (stats_uniqueQueryHits.find(p2pPacket.GetSenderIp()) == stats_uniqueQueryHits.end())
+            {
+                stats.IncrementUniqueQueryHits();
+                stats_uniqueQueryHits[p2pPacket.GetSenderIp()] = 1;
+            }
+            else
+            {
+                stats_uniqueQueryHits[p2pPacket.GetSenderIp()]++;
+            }
         }
 
         return; // Stop processing since we don't need to forward it back to the sender
@@ -699,6 +710,12 @@ int
 P2PApplication::GetQueryHits()
 {
     return stats.GetQueryHits();
+}
+
+int
+P2PApplication::GetUniqueQueryHits()
+{
+    return stats.GetUniqueQueryHits();
 }
 
 std::vector<int>

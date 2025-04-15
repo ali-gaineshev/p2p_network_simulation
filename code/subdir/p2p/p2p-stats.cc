@@ -8,7 +8,9 @@ P2PStats::P2PStats()
       sentRequests(0),
       forwardedQueryHits(0),
       triedRequests(0),
-      initializedRequests(0)
+      initializedRequests(0),
+      n_queryHits(0),
+      n_uniqueQueryHits(0)
 {
 }
 
@@ -50,6 +52,12 @@ P2PStats::IncrementQueryHits()
 }
 
 void
+P2PStats::IncrementUniqueQueryHits()
+{
+    n_uniqueQueryHits++;
+}
+
+void
 P2PStats::IncrementTriedRequests()
 {
     triedRequests++;
@@ -84,6 +92,12 @@ int
 P2PStats::GetQueryHits() const
 {
     return n_queryHits;
+}
+
+int
+P2PStats::GetUniqueQueryHits() const
+{
+    return n_uniqueQueryHits;
 }
 
 std::vector<int>

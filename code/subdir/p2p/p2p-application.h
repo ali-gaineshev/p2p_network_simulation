@@ -49,6 +49,7 @@ class P2PApplication : public Application
     // statistics
     bool m_queryHit = false;
     P2PStats stats;
+    std::map<Ipv4Address, int> stats_uniqueQueryHits;
 
     // retry events and variables needed
     EventId m_retryEvent;
@@ -76,6 +77,7 @@ class P2PApplication : public Application
     bool IsSrcNode();
     bool IsDisabledNode();
     int GetQueryHits();
+    int GetUniqueQueryHits();
     std::vector<int> GetHopsForQueryHits();
     std::vector<double> GetSecondsForQueryHits();
     int GetSentRequests();
