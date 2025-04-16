@@ -9,15 +9,15 @@ class Test:
         self.test_for_raw_qh: Test.Test_For_RawQueryHits = local_test_for_raw_qh
 
     def combine_qh_tests_to_str(self) -> str:
-        avg_latency = f"{self.test_for_avg_qh.avg_latency:.1e}".replace(
+        avg_latency = f"{self.test_for_avg_qh.avg_latency:.2e}".replace(
             "e", " × 10<sup>") + f"</sup>"
-        min_latency = f"{self.test_for_raw_qh.min_latency:.1e}".replace(
+        min_latency = f"{self.test_for_raw_qh.min_latency:.2e}".replace(
             "e", " × 10<sup>") + f"</sup>"
-        max_latency = f"{self.test_for_raw_qh.max_latency:.1e}".replace(
+        max_latency = f"{self.test_for_raw_qh.max_latency:.2e}".replace(
             "e", " × 10<sup>") + f"</sup>"
-        median_latency = f"{self.test_for_raw_qh.median_latency:.1e}".replace(
+        median_latency = f"{self.test_for_raw_qh.median_latency:.2e}".replace(
             "e", " × 10<sup>") + f"</sup>"
-        std_latency = f"{self.test_for_raw_qh.std_dev_latency:.1e}".replace(
+        std_latency = f"{self.test_for_raw_qh.std_dev_latency:.2e}".replace(
             "e", " × 10<sup>") + f"</sup>"
         return (
             f'<pre><code>'

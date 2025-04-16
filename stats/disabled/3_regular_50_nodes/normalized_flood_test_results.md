@@ -32,15 +32,15 @@ Median Hops: 10.00
 Standard Deviation of Hops: 1.95
 
 
-Average Latency: 4.4 × 10<sup>-02</sup>
+Average Latency: 4.41 × 10<sup>-02</sup>
 
-Max Latency: 5.1 × 10<sup>-02</sup>
+Max Latency: 5.07 × 10<sup>-02</sup>
 
-Min Latency: 3.5 × 10<sup>-02</sup>
+Min Latency: 3.52 × 10<sup>-02</sup>
 
-Median Latency: 4.4 × 10<sup>-02</sup>
+Median Latency: 4.38 × 10<sup>-02</sup>
 
-Standard Deviation of Latency: 6.6 × 10<sup>-03</sup>
+Standard Deviation of Latency: 6.64 × 10<sup>-03</sup>
 
 </code></pre>
 

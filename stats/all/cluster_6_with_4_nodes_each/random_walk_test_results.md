@@ -14,7 +14,7 @@
 
 	Average Success Rate (Unique Query Hits / Initialized Requests): 15 %
 
-	Average Redundant Query Hits (Unique Query Hits - Query Hits): 5 %
+	Average Redundant Query Hits (Unique Query Hits - Query Hits): 2 %
 
 	Average Overhead Per Query Hit (Total Messages / Unique Query Hit): 42
 
@@ -32,15 +32,15 @@ Median Hops: 2.00
 Standard Deviation of Hops: 0.79
 
 
-Average Latency: 1.1 × 10<sup>-02</sup>
+Average Latency: 1.14 × 10<sup>-02</sup>
 
-Max Latency: 1.8 × 10<sup>-02</sup>
+Max Latency: 1.78 × 10<sup>-02</sup>
 
-Min Latency: 7.8 × 10<sup>-03</sup>
+Min Latency: 7.76 × 10<sup>-03</sup>
 
-Median Latency: 1.2 × 10<sup>-02</sup>
+Median Latency: 1.15 × 10<sup>-02</sup>
 
-Standard Deviation of Latency: 3.4 × 10<sup>-03</sup>
+Standard Deviation of Latency: 3.39 × 10<sup>-03</sup>
 
 </code></pre>
 

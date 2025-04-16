@@ -130,7 +130,7 @@ def read_main_df(main_df: pd.DataFrame):
         src_node['UniqueQueryHits'] / src_node['InitializedRequests']) * 100
     src_node['RedundantQueryHits'] = src_node.apply(
         lambda row: 0 if row['UniqueQueryHits'] == 0 else (
-            (row['QueryHits'] - row['UniqueQueryHits']) / row['UniqueQueryHits']) * 100,
+            (row['QueryHits'] - row['UniqueQueryHits']) / row['QueryHits']) * 100,
         axis=1
     )
     src_node = src_node.rename(columns={'TriedRequests': 'TotalRetries'})
