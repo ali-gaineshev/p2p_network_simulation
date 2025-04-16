@@ -1,27 +1,27 @@
 # all/3_regular_10_nodes --- random_walk
 ## Source Nodes Test Results:
-	Average Query Hits: 1.00
+	Average Query Hits: 1.15
 
 	Median Query Hits: 1.00
 
 	Max Query Hits: 2.00
 
-	Average Unique Query Hits: 0.95
+	Average Unique Query Hits: 1.05
 
-	Average Total Retries: 3.75
+	Average Total Retries: 3.20
 
-	Average Initialized Requests: 7.50
+	Average Initialized Requests: 6.40
 
-	Average Success Rate (Unique Query Hits / Initialized Requests): 14 %
+	Average Success Rate (Unique Query Hits / Initialized Requests): 17 %
 
-	Average Redundant Query Hits (Unique Query Hits - Query Hits): 5 %
+	Average Redundant Query Hits (Unique Query Hits - Query Hits): 10 %
 
-	Average Overhead Per Query Hit (Total Messages / Unique Query Hit): 22
+	Average Overhead Per Query Hit (Total Messages / Unique Query Hit): 17
 
 
 
 ## Average Query Hits Test Results:
-<pre><code>Average Hops: 1.37
+<pre><code>Average Hops: 1.12
 
 Min Hops: 1.00
 
@@ -29,37 +29,37 @@ Max Hops: 2.00
 
 Median Hops: 1.00
 
-Standard Deviation of Hops: 0.49
+Standard Deviation of Hops: 0.34
 
 
-Average Latency: 9.5 × 10<sup>-03</sup>
+Average Latency: 8.9 × 10<sup>-03</sup>
 
-Max Latency: 1.3 × 10<sup>-02</sup>
+Max Latency: 1.2 × 10<sup>-02</sup>
 
-Min Latency: 6.4 × 10<sup>-03</sup>
+Min Latency: 7.6 × 10<sup>-03</sup>
 
-Median Latency: 9.5 × 10<sup>-03</sup>
+Median Latency: 8.7 × 10<sup>-03</sup>
 
-Standard Deviation of Latency: 2.0 × 10<sup>-03</sup>
+Standard Deviation of Latency: 1.2 × 10<sup>-03</sup>
 
 </code></pre>
 
 ---------------------------------------------
 ## Intermediate Nodes Test Results:
 
-	Average Total Work (Sent + Received + Forwarded QH): 23
+	Average Total Work (Sent + Received + Forwarded QH): 18
 
-	Average Wasted Requests ((Sent - Forwarded QH) / Received): 27%
+	Average Wasted Requests ((Sent - Forwarded QH) / Received): 21%
 
 	Average Query Hit Efficiency (Forwarded QH / Received): 11%
 
-	Average Count of Zero Work Done Nodes (No Sent, Received, Forwarded QH): 1.65
+	Average Count of Zero Work Done Nodes (No Sent, Received, Forwarded QH): 2.80
 
-	Average Sent Requests: 0.88
+	Average Sent Requests: 0.64
 
-	Average Forwarded Query Hits: 0.17
+	Average Forwarded Query Hits: 0.16
 
-	Average Received Requests: 1.86
+	Average Received Requests: 1.46
 
 	Average Count of Disabled Nodes: 0.00
 

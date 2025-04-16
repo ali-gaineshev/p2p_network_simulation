@@ -79,7 +79,7 @@ CreateRegularGraph(std::string fileName)
 
     // generate random variable
     Ptr<UniformRandomVariable> delay = CreateObject<UniformRandomVariable>();
-    std::string delayString = std::to_string(delay->GetValue(1.5, 2.5)) + "ms";
+    std::string delayString = std::to_string(delay->GetValue(1.8, 2.2)) + "ms";
 
     // Install the RandomDelay model to the channel
     p2p.SetChannelAttribute("Delay", StringValue(delayString));

@@ -1,22 +1,22 @@
 # all/tree_with_80_nodes --- normalized_flood
 ## Source Nodes Test Results:
-	Average Query Hits: 0.15
+	Average Query Hits: 0.10
 
 	Median Query Hits: 0.00
 
 	Max Query Hits: 1.00
 
-	Average Unique Query Hits: 0.15
+	Average Unique Query Hits: 0.10
 
-	Average Total Retries: 4.85
+	Average Total Retries: 4.80
 
-	Average Initialized Requests: 4.85
+	Average Initialized Requests: 4.80
 
-	Average Success Rate (Unique Query Hits / Initialized Requests): 4 %
+	Average Success Rate (Unique Query Hits / Initialized Requests): 3 %
 
 	Average Redundant Query Hits (Unique Query Hits - Query Hits): 0 %
 
-	Average Overhead Per Query Hit (Total Messages / Unique Query Hit): 45
+	Average Overhead Per Query Hit (Total Messages / Unique Query Hit): 34
 
 
 
@@ -32,34 +32,34 @@ Median Hops: 5.00
 Standard Deviation of Hops: 0.00
 
 
-Average Latency: 2.2 × 10<sup>-02</sup>
+Average Latency: 2.3 × 10<sup>-02</sup>
 
-Max Latency: 2.2 × 10<sup>-02</sup>
+Max Latency: 2.3 × 10<sup>-02</sup>
 
-Min Latency: 2.2 × 10<sup>-02</sup>
+Min Latency: 2.3 × 10<sup>-02</sup>
 
-Median Latency: 2.2 × 10<sup>-02</sup>
+Median Latency: 2.3 × 10<sup>-02</sup>
 
-Standard Deviation of Latency: 2.8 × 10<sup>-05</sup>
+Standard Deviation of Latency: 4.5 × 10<sup>-05</sup>
 
 </code></pre>
 
 ---------------------------------------------
 ## Intermediate Nodes Test Results:
 
-	Average Total Work (Sent + Received + Forwarded QH): 43
+	Average Total Work (Sent + Received + Forwarded QH): 42
 
 	Average Wasted Requests ((Sent - Forwarded QH) / Received): 15%
 
 	Average Query Hit Efficiency (Forwarded QH / Received): 0%
 
-	Average Count of Zero Work Done Nodes (No Sent, Received, Forwarded QH): 60.90
+	Average Count of Zero Work Done Nodes (No Sent, Received, Forwarded QH): 60.85
 
-	Average Sent Requests: 0.24
+	Average Sent Requests: 0.23
 
 	Average Forwarded Query Hits: 0.01
 
-	Average Received Requests: 0.31
+	Average Received Requests: 0.30
 
 	Average Count of Disabled Nodes: 0.00
 

@@ -7,8 +7,11 @@ from node import *
 ALGS = ['flood', 'random_walk', 'normalized_flood']
 TOPOLOGIES = ['3_regular_10_nodes', '3_regular_20_nodes', '3_regular_30_nodes',
               '3_regular_40_nodes', '3_regular_50_nodes', '4_regular_200_nodes',
-              '5_regular_200_nodes', 'cluster_6_with_4_nodes_each', 'megagraph_3_clusters',
-              'megagraph_5_clusters', 'tree_with_80_nodes']
+              '5_regular_200_nodes', 'cluster_6_with_4_nodes_each', 'cluster_6_with_10_nodes_each',
+              'cluster_6_with_20_nodes_each', 'cluster_6_with_30_nodes_each', 'megagraph_3_clusters',
+              'megagraph_5_clusters', 'tree_with_10_nodes', 'tree_with_20_nodes', 'tree_with_30_nodes',
+              'tree_with_40_nodes', 'tree_with_50_nodes', 'tree_with_60_nodes', 'tree_with_70_nodes',
+              'tree_with_80_nodes']
 TYPES = ['all', 'disabled']
 stat_folder = 'test_results/'
 
@@ -48,6 +51,7 @@ def main():
                     raw_query_hits_tests = RawQueryHitsTests()
 
                     # for each pair of files
+                    count = 0
                     for pair in pairs:
                         # print(f"        Pair: {pair}")
                         # read the files and get data
@@ -59,7 +63,8 @@ def main():
                         src_node_tests.append_row(src_node)
                         avg_query_hits_tests.append_row(per_avg_qh_stats)
                         raw_query_hits_tests.append_row(query_hits_df)
-
+                        count += 1
+                    print(f"        Count: {count}")
                     # calculate combined stats
                     local_test_for_int_nodes = int_node_tests.calculate_stats()
                     local_test_for_src_nodes = src_node_tests.calculate_stats()

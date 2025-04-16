@@ -32,30 +32,30 @@ Median Hops: 5.00
 Standard Deviation of Hops: 0.00
 
 
-Average Latency: 2.2 × 10<sup>-02</sup>
+Average Latency: 2.3 × 10<sup>-02</sup>
 
-Max Latency: 2.2 × 10<sup>-02</sup>
+Max Latency: 2.3 × 10<sup>-02</sup>
 
-Min Latency: 2.2 × 10<sup>-02</sup>
+Min Latency: 2.3 × 10<sup>-02</sup>
 
-Median Latency: 2.2 × 10<sup>-02</sup>
+Median Latency: 2.3 × 10<sup>-02</sup>
 
-Standard Deviation of Latency: 9.0 × 10<sup>-05</sup>
+Standard Deviation of Latency: 6.4 × 10<sup>-05</sup>
 
 </code></pre>
 
 ---------------------------------------------
 ## Intermediate Nodes Test Results:
 
-	Average Total Work (Sent + Received + Forwarded QH): 117
+	Average Total Work (Sent + Received + Forwarded QH): 118
 
-	Average Wasted Requests ((Sent - Forwarded QH) / Received): 27%
+	Average Wasted Requests ((Sent - Forwarded QH) / Received): 26%
 
 	Average Query Hit Efficiency (Forwarded QH / Received): 0%
 
-	Average Count of Zero Work Done Nodes (No Sent, Received, Forwarded QH): 45.00
+	Average Count of Zero Work Done Nodes (No Sent, Received, Forwarded QH): 45.85
 
-	Average Sent Requests: 0.65
+	Average Sent Requests: 0.66
 
 	Average Forwarded Query Hits: 0.01
 
