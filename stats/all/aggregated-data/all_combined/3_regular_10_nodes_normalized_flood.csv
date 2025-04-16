@@ -1,0 +1,11 @@
+nodeid,queryhits,uniquequeryhits,receivedrequests,sentrequests,forwardedqueryhits,triedrequests,initializedrequests,search_type,node_count,graph_type
+0,22,22,22,0,0,57,114,normalized_flood,10,3_regular
+1,0,0,14,5,3,0,0,normalized_flood,10,3_regular
+2,0,0,22,7,4,0,0,normalized_flood,10,3_regular
+3,0,0,13,6,0,0,0,normalized_flood,10,3_regular
+4,0,0,17,5,0,0,0,normalized_flood,10,3_regular
+5,0,0,56,24,18,0,0,normalized_flood,10,3_regular
+6,0,0,27,11,2,0,0,normalized_flood,10,3_regular
+7,0,0,43,27,2,0,0,normalized_flood,10,3_regular
+8,0,0,40,24,2,0,0,normalized_flood,10,3_regular
+9,22,0,22,0,22,0,0,normalized_flood,10,3_regular
