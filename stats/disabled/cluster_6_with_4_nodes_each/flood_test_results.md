@@ -12,6 +12,8 @@
 
 	Average Initialized Requests: 6.00
 
+	Average True Success Rate (Any Query Hits): 100 %
+
 	Average Success Rate (Unique Query Hits / Initialized Requests): 16 %
 
 	Average Redundant Query Hits (Unique Query Hits - Query Hits): 0 %
@@ -32,15 +34,15 @@ Median Hops: 1.00
 Standard Deviation of Hops: 0.00
 
 
-Average Latency: 8.3 × 10<sup>-03</sup>
+Average Latency: 8.32 × 10<sup>-03</sup>
 
-Max Latency: 9.0 × 10<sup>-03</sup>
+Max Latency: 8.98 × 10<sup>-03</sup>
 
-Min Latency: 7.6 × 10<sup>-03</sup>
+Min Latency: 7.57 × 10<sup>-03</sup>
 
-Median Latency: 8.3 × 10<sup>-03</sup>
+Median Latency: 8.32 × 10<sup>-03</sup>
 
-Standard Deviation of Latency: 4.7 × 10<sup>-04</sup>
+Standard Deviation of Latency: 4.66 × 10<sup>-04</sup>
 
 </code></pre>
 
