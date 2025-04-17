@@ -2,11 +2,37 @@ import pandas as pd
 
 
 class Test:
-    def __init__(self, local_test_for_src_nodes, local_test_for_avg_qh, local_test_for_raw_qh, local_test_for_int_nodes):
+    def __init__(self, topology, algorithm, network_type, local_test_for_src_nodes, local_test_for_avg_qh, local_test_for_raw_qh, local_test_for_int_nodes):
+        self.topology = topology
+        self.algorithm = algorithm
+        self.network_type = network_type
         self.test_for_int_nodes: Test.Test_For_IntermediateNodes = local_test_for_int_nodes
         self.test_for_src_nodes: Test.Test_For_SourceNodes = local_test_for_src_nodes
         self.test_for_avg_qh: Test.Test_For_AvgQueryHits = local_test_for_avg_qh
         self.test_for_raw_qh: Test.Test_For_RawQueryHits = local_test_for_raw_qh
+
+    def get_table_row(self) -> list[str]:
+        def format_scientific_superscript(value: float) -> str:
+            # Format in scientific notation like 1.23e-05
+            base, exponent = f"{value:.2e}".split("e")
+            exp = int(exponent)
+            superscript_map = str.maketrans("-0123456789", "⁻⁰¹²³⁴⁵⁶⁷⁸⁹")
+            return f"{base}×10{str(exp).translate(superscript_map)}"
+
+        return [
+            f"{self.topology}-{self.network_type}",
+            self.algorithm,
+            f"{self.test_for_src_nodes.avg_total_retries:.1f}",
+            f"{self.test_for_src_nodes.avg_unique_qh:.1f}",
+            f"{int(self.test_for_src_nodes.true_avg_success_rate)}%",
+            f"{int(self.test_for_src_nodes.avg_redundant_qh)}%",
+            f"{self.test_for_avg_qh.avg_hops:.1f}",
+            format_scientific_superscript(self.test_for_avg_qh.avg_latency),
+            f"{self.test_for_int_nodes.avg_total_work:.1f}",
+            f"{int(self.test_for_int_nodes.avg_wasted_req_perc)}%",
+            f"{int(self.test_for_int_nodes.avg_qh_efficiency)}%",
+            f"{self.test_for_int_nodes.avg_zero_work_done_nodes:.1f}",
+        ]
 
     def combine_qh_tests_to_str(self) -> str:
         avg_latency = f"{self.test_for_avg_qh.avg_latency:.2e}".replace(
@@ -74,7 +100,7 @@ class Test:
     class Test_For_SourceNodes:
         def __init__(self, avg_qh, median_qh,
                      max_qh, avg_unique_qh, avg_total_retries,
-                     avg_initialized_req, avg_success_rate, avg_redundant_qh,
+                     avg_initialized_req, true_avg_success_rate, avg_success_rate, avg_redundant_qh,
                      avg_overhead_per_qh):
             self.avg_qh = avg_qh
             self.avg_unique_qh = avg_unique_qh
@@ -82,6 +108,7 @@ class Test:
             self.max_qh = max_qh
             self.avg_total_retries = avg_total_retries
             self.avg_initialized_req = avg_initialized_req
+            self.true_avg_success_rate = true_avg_success_rate
             self.avg_success_rate = avg_success_rate
             self.avg_redundant_qh = avg_redundant_qh
             self.avg_overhead_per_qh = avg_overhead_per_qh
@@ -94,6 +121,7 @@ class Test:
                 f"\tAverage Unique Query Hits: {self.avg_unique_qh:.2f}\n\n"
                 f"\tAverage Total Retries: {self.avg_total_retries:.2f}\n\n"
                 f"\tAverage Initialized Requests: {self.avg_initialized_req:.2f}\n\n"
+                f"\tAverage True Success Rate (Any Query Hits): {int(self.true_avg_success_rate)} %\n\n"
                 f"\tAverage Success Rate (Unique Query Hits / Initialized Requests): {int(self.avg_success_rate)} %\n\n"
                 f"\tAverage Redundant Query Hits (Unique Query Hits - Query Hits): {int(self.avg_redundant_qh)} %\n\n"
                 f"\tAverage Overhead Per Query Hit (Total Messages / Unique Query Hit): {int(self.avg_overhead_per_qh)}\n\n"
@@ -182,6 +210,7 @@ class SrcNodeTests:
         avg_unique_qh = self.df['UniqueQueryHits'].mean()
         avg_total_retries = self.df['TotalRetries'].mean()
         avg_initialized_req = self.df['InitializedRequests'].mean()
+        true_avg_success_rate = self.df['TrueSuccessRate'].mean()
         avg_success_rate = self.df['SuccessRate'].mean()
         avg_redundant_qh = self.df['RedundantQueryHits'].mean()
         avg_overhead_per_qh = self.df['OverheadPerQueryHit'].mean()
@@ -193,6 +222,7 @@ class SrcNodeTests:
             avg_unique_qh,
             avg_total_retries,
             avg_initialized_req,
+            true_avg_success_rate,
             avg_success_rate,
             avg_redundant_qh,
             avg_overhead_per_qh

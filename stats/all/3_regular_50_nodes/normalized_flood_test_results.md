@@ -12,6 +12,8 @@
 
 	Average Initialized Requests: 7.00
 
+	Average True Success Rate (Any Query Hits): 80 %
+
 	Average Success Rate (Unique Query Hits / Initialized Requests): 15 %
 
 	Average Redundant Query Hits (Unique Query Hits - Query Hits): 0 %

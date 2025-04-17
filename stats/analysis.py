@@ -1,10 +1,12 @@
 # Importing necessary libraries
+import csv
 import pandas as pd
 import numpy as np
 import os
 from node import *
 
 ALGS = ['flood', 'random_walk', 'normalized_flood']
+ALGS_SHORT = {'flood': 'F', 'random_walk': 'RW', 'normalized_flood': 'NF'}
 TOPOLOGIES = ['3_regular_10_nodes', '3_regular_20_nodes', '3_regular_30_nodes',
               '3_regular_40_nodes', '3_regular_50_nodes', '4_regular_200_nodes',
               '5_regular_200_nodes', 'cluster_6_with_4_nodes_each', 'cluster_6_with_10_nodes_each',
@@ -15,10 +17,13 @@ TOPOLOGIES = ['3_regular_10_nodes', '3_regular_20_nodes', '3_regular_30_nodes',
 TYPES = ['all', 'disabled']
 stat_folder = 'test_results/'
 
+TABLE_CSV_FILE = 'all_data_in_table.csv'
+
 
 def main():
     directories = os.listdir(os.getcwd())
 
+    all_tests: list[Test] = []
     # for disabled and not disabled types
     for network_type in directories:
         if os.path.isdir(network_type) and network_type in TYPES:
@@ -71,11 +76,29 @@ def main():
                     local_test_for_avg_qh = avg_query_hits_tests.calculate_stats()
                     local_test_for_raw_qh = raw_query_hits_tests.calculate_stats()
 
-                    test = Test(local_test_for_src_nodes, local_test_for_avg_qh,
+                    test = Test(topology, ALGS_SHORT[alg], network_type, local_test_for_src_nodes, local_test_for_avg_qh,
                                 local_test_for_raw_qh, local_test_for_int_nodes)
-                    test.write_to_txt_file(
-                        topology_path, f"{alg}_test_results.md", alg)
+                    all_tests.append(test)
+                    # test.write_to_txt_file(topology_path, f"{alg}_test_results.md", alg)
 
+    all_tests.sort(key=lambda test: (
+        test.topology, test.network_type, test.algorithm))
+
+    write_all_tests_to_csv(all_tests)
+
+
+def write_all_tests_to_csv(tests: list[Test]):
+    with open(TABLE_CSV_FILE, "w") as f:
+        writer = csv.writer(f)
+        # write header
+        writer.writerow(['Topology', 'Algorithm', 'Average Tried Requests',
+                         'Average Unique Query Hits', 'Average Success Rate',
+                         'Redundant Query Hits', 'Average Hops', 'Average Latency',
+                         'Average Total Work', 'Average Wasted Requests', 'Average Query Hit Efficiency',
+                         'Count of Zero Work Done Nodes'])
+
+        for test in tests:
+            writer.writerow(test.get_table_row())
 
 # READING MAIN CSV FILES AND CONVERTING THEM TO DATAFRAMES
 
@@ -139,6 +162,11 @@ def read_main_df(main_df: pd.DataFrame):
             src_node['UniqueQueryHits'].iloc[0]
     else:
         src_node['OverheadPerQueryHit'] = float('nan')
+
+    if src_node['QueryHits'].iloc[0] > 0:
+        src_node["TrueSuccessRate"] = 100.0
+    else:
+        src_node["TrueSuccessRate"] = 0.0
 
     return src_node, int_nodes_summary_df
 
